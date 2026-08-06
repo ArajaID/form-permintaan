@@ -12,6 +12,18 @@ const db = drizzle(sqlite, { schema });
 async function seed() {
   console.log("🌱 Seeding database...\n");
 
+  // Clear existing items, requests, movements, and notifications
+  try {
+    db.delete(schema.requestItems).run();
+    db.delete(schema.stockMovements).run();
+    db.delete(schema.notifications).run();
+    db.delete(schema.requests).run();
+    db.delete(schema.items).run();
+    console.log("🗑️  Semua data barang, permintaan, dan pergerakan stok berhasil dihapus.");
+  } catch (err: any) {
+    console.log("⚠️ Error clearing items tables:", err?.message || err);
+  }
+
   // Create single Plant Manager user via Better Auth
   const user = {
     name: "Abdul Rahman Jamil",
