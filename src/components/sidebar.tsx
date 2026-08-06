@@ -16,6 +16,7 @@ import {
   Home,
   Users,
   UserCog,
+  Database,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -80,6 +81,12 @@ const allMenuItems = [
     href: "/karyawan",
     icon: Users,
     roles: ["supervisor", "plant_manager"],
+  },
+  {
+    label: "Backup & Restore",
+    href: "/backup-restore",
+    icon: Database,
+    roles: ["plant_manager"],
   },
   {
     label: "Notifikasi",
