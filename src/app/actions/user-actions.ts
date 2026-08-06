@@ -19,7 +19,7 @@ export async function getEmployees(search?: string) {
   const session = await getSession();
   
   // Only supervisor and plant manager can access user management
-  const role = (session.user as any).role;
+  const role = session.user.role;
   if (role !== "supervisor" && role !== "plant_manager") {
     throw new Error("Tidak memiliki hak akses");
   }
@@ -46,7 +46,7 @@ export async function addEmployee(data: {
   role: "leader" | "supervisor" | "plant_manager";
 }) {
   const session = await getSession();
-  const currentRole = (session.user as any).role;
+  const currentRole = session.user.role;
   if (currentRole !== "supervisor" && currentRole !== "plant_manager") {
     throw new Error("Tidak memiliki hak akses");
   }
@@ -71,7 +71,7 @@ export async function addEmployee(data: {
 
 export async function toggleEmployeeStatus(userId: string) {
   const session = await getSession();
-  const currentRole = (session.user as any).role;
+  const currentRole = session.user.role;
   if (currentRole !== "supervisor" && currentRole !== "plant_manager") {
     throw new Error("Tidak memiliki hak akses");
   }

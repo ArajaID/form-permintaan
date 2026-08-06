@@ -56,6 +56,14 @@ npx drizzle-kit push
 npx tsx src/db/seed.ts || true
 npm run build
 
+# Ensure SQLite database & WAL files have proper read/write permissions
+echo -e "\n${YELLOW}[5.5/6] Setting database read/write permissions...${NC}"
+touch local.db
+chmod 666 local.db local.db-wal local.db-shm 2>/dev/null || true
+if [ -n "$SUDO_USER" ]; then
+    chown $SUDO_USER:$SUDO_USER local.db local.db-wal local.db-shm 2>/dev/null || true
+fi
+
 # 6. PM2 Process Start
 echo -e "\n${YELLOW}[6/6] Starting application with PM2...${NC}"
 pm2 start npm --name "form-permintaan" -- start || pm2 restart form-permintaan

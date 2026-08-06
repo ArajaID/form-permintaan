@@ -7,9 +7,6 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
   trustedOrigins: process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : undefined,
-  advanced: {
-    trustHostHeader: true,
-  },
   database: drizzleAdapter(db, {
     provider: "sqlite",
     schema: {
@@ -36,7 +33,7 @@ export const auth = betterAuth({
         defaultValue: true,
         input: true,
       },
-    },
+    } as const,
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days

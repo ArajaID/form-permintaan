@@ -14,7 +14,7 @@ async function seed() {
 
   // Create single Plant Manager user via Better Auth
   const user = {
-    name: "Plant Manager",
+    name: "Abdul Rahman Jamil",
     email: "arajatech@gmail.com",
     password: "password123",
     role: "plant_manager",
