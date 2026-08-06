@@ -33,7 +33,7 @@ export default function LoginPage() {
         password,
       });
 
-      if (result.error) {
+      if (result?.error) {
         toast.error(result.error.message || "Login gagal. Periksa email dan kata sandi Anda.");
         setLoading(false);
         return;
@@ -42,8 +42,9 @@ export default function LoginPage() {
       toast.success("Login berhasil!");
       router.push("/dashboard");
       router.refresh();
-    } catch (error) {
-      toast.error("Terjadi kesalahan saat login.");
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      toast.error(error?.message || "Terjadi kesalahan saat login.");
       setLoading(false);
     }
   };
