@@ -35,7 +35,16 @@ fi
 # 4. Setup file .env
 echo -e "\n${YELLOW}[4/6] Setting up environment variables (.env)...${NC}"
 if [ ! -f .env ]; then
-    read -p "Masukkan URL Domain Cloudflare Anda (contoh: https://form.domainanda.com): " APP_URL
+    read -p "Masukkan URL Domain Cloudflare Anda (contoh: https://form.domainanda.com): " RAW_URL
+    # Remove trailing slash
+    RAW_URL=$(echo "$RAW_URL" | sed 's/*$//' | sed 's/\/*$//')
+    # Prepend https:// if protocol missing
+    if [[ ! "$RAW_URL" =~ ^http:// && ! "$RAW_URL" =~ ^https:// ]]; then
+        APP_URL="https://${RAW_URL}"
+    else
+        APP_URL="${RAW_URL}"
+    fi
+
     SECRET_KEY=$(openssl rand -hex 32 2>/dev/null || echo "secret_$(date +%s)_key")
 
     cat <<EOF > .env
