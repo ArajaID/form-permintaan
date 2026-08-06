@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from "react";
 import {
   getEmployees,
   addEmployee,
+  updateEmployee,
   toggleEmployeeStatus,
 } from "@/app/actions/user-actions";
 import {
@@ -51,6 +52,7 @@ import {
   Calendar,
   Mail,
   AlertCircle,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -81,6 +83,14 @@ export default function KaryawanPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"leader" | "supervisor" | "plant_manager">("leader");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Edit Dialog State
+  const [editDialog, setEditDialog] = useState<{
+    open: boolean;
+    employee: EmployeeData | null;
+  }>({ open: false, employee: null });
+  const [editName, setEditName] = useState("");
+  const [editRole, setEditRole] = useState<"leader" | "supervisor" | "plant_manager">("leader");
 
   // Toggle Confirm Dialog State
   const [toggleDialog, setToggleDialog] = useState<{
@@ -122,6 +132,35 @@ export default function KaryawanPage() {
         loadEmployees();
       } catch (error: any) {
         toast.error(error.message || "Gagal menambahkan karyawan");
+      }
+    });
+  };
+
+  const openEditModal = (emp: EmployeeData) => {
+    setEditName(emp.name);
+    setEditRole(emp.role as any);
+    setEditDialog({ open: true, employee: emp });
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editDialog.employee) return;
+    if (!editName.trim()) {
+      toast.error("Nama karyawan wajib diisi");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        await updateEmployee(editDialog.employee!.id, {
+          name: editName,
+          role: editRole,
+        });
+        toast.success(`Data karyawan ${editName} berhasil diperbarui!`);
+        setEditDialog({ open: false, employee: null });
+        loadEmployees();
+      } catch (error: any) {
+        toast.error(error.message || "Gagal memperbarui data karyawan");
       }
     });
   };
@@ -313,30 +352,41 @@ export default function KaryawanPage() {
                           </span>
                         </TableCell>
                         <TableCell className="text-right pr-6">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setToggleDialog({ open: true, employee: emp })
-                            }
-                            className={
-                              emp.isActive
-                                ? "text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 font-bold text-xs rounded-xl"
-                                : "bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl border-0"
-                            }
-                          >
-                            {emp.isActive ? (
-                              <>
-                                <UserX className="w-3.5 h-3.5 mr-1.5" />
-                                Nonaktifkan
-                              </>
-                            ) : (
-                              <>
-                                <UserCheck className="w-3.5 h-3.5 mr-1.5" />
-                                Aktifkan
-                              </>
-                            )}
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEditModal(emp)}
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200 font-bold text-xs rounded-xl cursor-pointer"
+                            >
+                              <Pencil className="w-3.5 h-3.5 mr-1" />
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setToggleDialog({ open: true, employee: emp })
+                              }
+                              className={
+                                emp.isActive
+                                  ? "text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 font-bold text-xs rounded-xl cursor-pointer"
+                                  : "bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl border-0 cursor-pointer"
+                              }
+                            >
+                              {emp.isActive ? (
+                                <>
+                                  <UserX className="w-3.5 h-3.5 mr-1.5" />
+                                  Nonaktifkan
+                                </>
+                              ) : (
+                                <>
+                                  <UserCheck className="w-3.5 h-3.5 mr-1.5" />
+                                  Aktifkan
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -454,6 +504,84 @@ export default function KaryawanPage() {
                   <UserPlus className="w-4 h-4 mr-2" />
                 )}
                 Simpan Karyawan
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Employee Dialog */}
+      <Dialog
+        open={editDialog.open}
+        onOpenChange={(open) =>
+          setEditDialog({ open, employee: open ? editDialog.employee : null })
+        }
+      >
+        <DialogContent className="sm:max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-slate-900 font-bold">
+              <Pencil className="w-5 h-5 text-blue-600" />
+              Edit Data Karyawan
+            </DialogTitle>
+            <DialogDescription>
+              Ubah nama lengkap dan jabatan untuk akun {editDialog.employee?.email}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleEditSubmit} className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name" className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Nama Lengkap
+              </Label>
+              <Input
+                id="edit-name"
+                placeholder="Nama lengkap karyawan..."
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="rounded-xl border-slate-200"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-role" className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Jabatan / Peran Access
+              </Label>
+              <Select
+                value={editRole}
+                onValueChange={(val: any) => setEditRole(val)}
+              >
+                <SelectTrigger className="rounded-xl border-slate-200">
+                  <SelectValue placeholder="Pilih jabatan..." />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="leader">Production Leader</SelectItem>
+                  <SelectItem value="supervisor">Supervisor Produksi</SelectItem>
+                  <SelectItem value="plant_manager">Plant Manager</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <DialogFooter className="pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditDialog({ open: false, employee: null })}
+                className="rounded-xl border-slate-300 font-semibold cursor-pointer"
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md shadow-blue-600/20 cursor-pointer"
+              >
+                {isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Pencil className="w-4 h-4 mr-2" />
+                )}
+                Simpan Perubahan
               </Button>
             </DialogFooter>
           </form>

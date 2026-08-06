@@ -105,6 +105,48 @@ export async function toggleEmployeeStatus(userId: string) {
   return { success: true, isActive: newStatus };
 }
 
+export async function updateEmployee(
+  userId: string,
+  data: { name: string; role?: "leader" | "supervisor" | "plant_manager" }
+) {
+  const session = await getSession();
+  const currentRole = session.user.role;
+  if (currentRole !== "supervisor" && currentRole !== "plant_manager") {
+    throw new Error("Tidak memiliki hak akses");
+  }
+
+  if (!data.name || !data.name.trim()) {
+    throw new Error("Nama karyawan wajib diisi");
+  }
+
+  const targetUser = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, userId))
+    .get();
+
+  if (!targetUser) throw new Error("Karyawan tidak ditemukan");
+
+  const updateData: { name: string; role?: "leader" | "supervisor" | "plant_manager"; updatedAt: Date } = {
+    name: data.name.trim(),
+    updatedAt: new Date(),
+  };
+
+  if (data.role) {
+    updateData.role = data.role;
+  }
+
+  await db
+    .update(users)
+    .set(updateData)
+    .where(eq(users.id, userId))
+    .run();
+
+  revalidatePath("/karyawan");
+
+  return { success: true };
+}
+
 export async function updatePassword(data: {
   currentPassword: string;
   newPassword: string;
