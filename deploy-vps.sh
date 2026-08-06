@@ -53,6 +53,7 @@ fi
 echo -e "\n${YELLOW}[5/6] Installing dependencies, pushing database schema & building app...${NC}"
 npm ci
 npx drizzle-kit push
+npx tsx src/db/seed.ts || true
 npm run build
 
 # 6. PM2 Process Start
