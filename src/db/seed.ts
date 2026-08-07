@@ -83,9 +83,37 @@ async function seed() {
     }
   }
 
+  // 4. Create sample GA and Purchasing accounts if not exist
+  const additionalUsers: {
+    name: string;
+    email: string;
+    password: string;
+    role: "leader" | "supervisor" | "plant_manager" | "ga" | "purchasing";
+  }[] = [
+    { name: "Tim General Affair", email: "ga@unindo.co.id", password: "password123", role: "ga" },
+    { name: "Tim Purchasing", email: "purchasing@unindo.co.id", password: "password123", role: "purchasing" },
+  ];
+
+  for (const u of additionalUsers) {
+    const ex = db.select().from(schema.users).where(eq(schema.users.email, u.email)).get();
+    if (ex) {
+      db.update(schema.users).set({ role: u.role, isActive: true, updatedAt: new Date() }).where(eq(schema.users.email, u.email)).run();
+      console.log(`✅ User existing diupdate: ${u.email} (${u.role})`);
+    } else {
+      try {
+        await auth.api.signUpEmail({ body: { name: u.name, email: u.email, password: u.password, role: u.role } });
+        console.log(`✅ User created: ${u.name} (${u.role}) - ${u.email}`);
+      } catch (err: any) {
+        console.log(`⚠️ Failed to create user: ${u.email}`, err?.message || "");
+      }
+    }
+  }
+
   console.log("\n✅ Seeding complete!");
   console.log("\n📋 Account Credentials:");
   console.log("   Plant Manager: arajatech@gmail.com / password123");
+  console.log("   Tim GA:        ga@unindo.co.id / password123");
+  console.log("   Purchasing:    purchasing@unindo.co.id / password123");
 
   process.exit(0);
 }

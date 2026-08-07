@@ -11,7 +11,7 @@ interface DigitalSignatureProps {
   timestamp?: Date | string | null;
   statusText?: string;
   requestId: number;
-  type: "requester" | "reviewer" | "warehouse";
+  type: "requester" | "reviewer" | "warehouse" | "handover";
 }
 
 export function DigitalSignatureStamp({
@@ -61,7 +61,7 @@ export function DigitalSignatureStamp({
     }
   }, [requestId, signerName, timestamp]);
 
-  if (!signerName || (type === "reviewer" && !timestamp)) {
+  if (!signerName || !timestamp) {
     return (
       <div style={{ textAlign: "center", width: "100%" }}>
         <p style={{ fontSize: "9pt", fontWeight: "bold", margin: "0 0 85px 0" }}>

@@ -41,6 +41,11 @@ const statusConfig = {
     icon: CheckCircle2,
     className: "bg-emerald-100 text-emerald-900 border-emerald-300",
   },
+  diserahkan: {
+    label: "BARANG DISERAHKAN & TERVERIFIKASI SAH",
+    icon: CheckCircle2,
+    className: "bg-teal-100 text-teal-900 border-teal-300",
+  },
   ditolak: {
     label: "PERMINTAAN DITOLAK",
     icon: XCircle,
@@ -154,7 +159,7 @@ export default async function VerifikasiDokumenPage({
             </div>
 
             {/* Signatures & Timestamps Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Requester Signature */}
               <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-2">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -190,7 +195,7 @@ export default async function VerifikasiDokumenPage({
                   <span className="text-xs font-bold text-slate-500 uppercase">
                     2. Penyetuju (Supervisor/PM)
                   </span>
-                  {request.status === "disetujui" ? (
+                  {request.status === "disetujui" || request.status === "diserahkan" ? (
                     <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   ) : (
                     <Clock className="w-4 h-4 text-amber-500" />
@@ -225,6 +230,51 @@ export default async function VerifikasiDokumenPage({
                 ) : (
                   <div className="text-xs text-slate-500 italic py-3">
                     Belum disetujui oleh atasan.
+                  </div>
+                )}
+              </div>
+
+              {/* Handover Signature */}
+              <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-2">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase">
+                    3. Penyerah Barang (GA/Purchasing)
+                  </span>
+                  {request.status === "diserahkan" ? (
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  ) : (
+                    <Clock className="w-4 h-4 text-amber-500" />
+                  )}
+                </div>
+                {request.handedOverByUser ? (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm">
+                        {request.handedOverByUser.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 text-sm">{request.handedOverByUser.name}</p>
+                        <p className="text-xs text-slate-500">
+                          {request.handedOverByUser.role === "ga" ? "Tim GA" : request.handedOverByUser.role === "purchasing" ? "Purchasing" : request.handedOverByUser.role} ({request.handedOverByUser.email})
+                        </p>
+                      </div>
+                    </div>
+                    {request.handedOverAt && (
+                      <div className="pt-2 border-t border-slate-100 text-xs font-medium text-slate-600 flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        Waktu Penyerahan: {new Date(request.handedOverAt).toLocaleDateString("id-ID", {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })} WIB
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-xs text-slate-500 italic py-3">
+                    Belum diserahkan oleh GA/Purchasing.
                   </div>
                 )}
               </div>

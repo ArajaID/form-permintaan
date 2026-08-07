@@ -106,7 +106,7 @@ export async function approveRequest(requestId: number, reason?: string) {
     .where(eq(requests.id, requestId))
     .run();
 
-  // Notify requester
+  // Notify requester & handover teams (GA / Purchasing)
   db.insert(notifications)
     .values({
       userId: request.requesterId,
@@ -116,9 +116,119 @@ export async function approveRequest(requestId: number, reason?: string) {
     })
     .run();
 
+  const handoverTeams = db
+    .select()
+    .from(users)
+    .where(
+      or(
+        eq(users.role, "ga"),
+        eq(users.role, "purchasing"),
+        eq(users.role, "plant_manager")
+      )
+    )
+    .all();
+
+  for (const teamMember of handoverTeams) {
+    db.insert(notifications)
+      .values({
+        userId: teamMember.id,
+        message: `Permintaan #${requestId} telah disetujui supervisor dan siap diserahkan`,
+        requestId: requestId,
+        createdAt: new Date(),
+      })
+      .run();
+  }
+
+  revalidatePath("/antrean-permintaan");
+  revalidatePath("/penyerahan-barang");
+  revalidatePath("/riwayat-permintaan");
+  revalidatePath(`/riwayat-permintaan/${requestId}`);
+  revalidatePath("/notifikasi");
+
+  return { success: true };
+}
+
+export async function handoverRequest(requestId: number, note?: string) {
+  const session = await getSession();
+  const allowedRoles = ["ga", "purchasing", "plant_manager", "supervisor"];
+  if (!session.user.role || !allowedRoles.includes(session.user.role)) {
+    throw new Error("Tidak memiliki izin untuk menyerahkan barang");
+  }
+
+  const request = (await db.query.requests.findFirst({
+    where: eq(requests.id, requestId),
+    with: {
+      requestItems: {
+        with: {
+          item: true,
+        },
+      },
+    },
+  })) as any;
+
+  if (!request) throw new Error("Permintaan tidak ditemukan");
+  if (request.status !== "disetujui") {
+    throw new Error("Permintaan belum disetujui atasan atau sudah diserahkan");
+  }
+
+  const now = new Date();
+
+  // Update status to diserahkan
+  db.update(requests)
+    .set({
+      status: "diserahkan",
+      handedOverBy: session.user.id,
+      handedOverAt: now,
+      handoverNote: note || null,
+    })
+    .where(eq(requests.id, requestId))
+    .run();
+
+  // Record stock movement (keluar) and deduct stock
+  for (const ri of request.requestItems) {
+    db.insert(stockMovements)
+      .values({
+        itemId: ri.itemId,
+        type: "keluar",
+        quantity: ri.quantity,
+        requestId: requestId,
+        note: `Penyerahan barang produksi #${requestId}${note ? ` (${note})` : ""}`,
+        createdBy: session.user.id,
+        createdAt: now,
+      })
+      .run();
+
+    db.update(items)
+      .set({
+        stock: sql`${items.stock} - ${ri.quantity}`,
+      })
+      .where(eq(items.id, ri.itemId))
+      .run();
+  }
+
+  // Notify requester
+  const roleLabel =
+    session.user.role === "ga"
+      ? "Tim GA"
+      : session.user.role === "purchasing"
+      ? "Purchasing"
+      : "Petugas";
+
+  db.insert(notifications)
+    .values({
+      userId: request.requesterId,
+      message: `Barang permintaan #${requestId} telah diserahkan oleh ${session.user.name} (${roleLabel})`,
+      requestId: requestId,
+      createdAt: now,
+    })
+    .run();
+
+  revalidatePath("/penyerahan-barang");
   revalidatePath("/antrean-permintaan");
   revalidatePath("/riwayat-permintaan");
   revalidatePath(`/riwayat-permintaan/${requestId}`);
+  revalidatePath("/stok");
+  revalidatePath("/kartu-stok");
   revalidatePath("/notifikasi");
 
   return { success: true };
@@ -178,10 +288,11 @@ export async function getRequests(filters?: {
 }) {
   const session = await getSession();
 
-  const allRequests = await db.query.requests.findMany({
+  const allRequests = (await db.query.requests.findMany({
     with: {
       requester: true,
       reviewer: true,
+      handedOverByUser: true,
       requestItems: {
         with: {
           item: true,
@@ -189,7 +300,7 @@ export async function getRequests(filters?: {
       },
     },
     orderBy: [desc(requests.createdAt)],
-  }) as any[];
+  })) as any[];
 
   let filtered = allRequests;
 
@@ -222,6 +333,7 @@ export async function getRequestById(requestId: number) {
     with: {
       requester: true,
       reviewer: true,
+      handedOverByUser: true,
       requestItems: {
         with: {
           item: true,
@@ -238,6 +350,16 @@ export async function getPendingRequestsCount() {
     .select({ count: sql<number>`count(*)` })
     .from(requests)
     .where(eq(requests.status, "menunggu"))
+    .get();
+
+  return result?.count ?? 0;
+}
+
+export async function getApprovedRequestsCount() {
+  const result = db
+    .select({ count: sql<number>`count(*)` })
+    .from(requests)
+    .where(eq(requests.status, "disetujui"))
     .get();
 
   return result?.count ?? 0;

@@ -62,12 +62,16 @@ const roleLabels: Record<string, string> = {
   leader: "Production Leader",
   supervisor: "Supervisor Produksi",
   plant_manager: "Plant Manager",
+  ga: "Tim General Affair (GA)",
+  purchasing: "Tim Purchasing",
 };
 
 const roleBadgeStyles: Record<string, string> = {
   leader: "bg-blue-50 text-blue-700 border-blue-200",
   supervisor: "bg-purple-50 text-purple-700 border-purple-200",
   plant_manager: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  ga: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  purchasing: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
 export default function KaryawanPage() {
@@ -81,7 +85,7 @@ export default function KaryawanPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"leader" | "supervisor" | "plant_manager">("leader");
+  const [role, setRole] = useState<"leader" | "supervisor" | "plant_manager" | "ga" | "purchasing">("leader");
   const [showPassword, setShowPassword] = useState(false);
 
   // Edit Dialog State
@@ -90,7 +94,7 @@ export default function KaryawanPage() {
     employee: EmployeeData | null;
   }>({ open: false, employee: null });
   const [editName, setEditName] = useState("");
-  const [editRole, setEditRole] = useState<"leader" | "supervisor" | "plant_manager">("leader");
+  const [editRole, setEditRole] = useState<"leader" | "supervisor" | "plant_manager" | "ga" | "purchasing">("leader");
 
   // Toggle Confirm Dialog State
   const [toggleDialog, setToggleDialog] = useState<{
@@ -480,6 +484,8 @@ export default function KaryawanPage() {
                   <SelectItem value="leader">Production Leader</SelectItem>
                   <SelectItem value="supervisor">Supervisor Produksi</SelectItem>
                   <SelectItem value="plant_manager">Plant Manager</SelectItem>
+                  <SelectItem value="ga">Tim General Affair (GA)</SelectItem>
+                  <SelectItem value="purchasing">Tim Purchasing</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -558,6 +564,8 @@ export default function KaryawanPage() {
                   <SelectItem value="leader">Production Leader</SelectItem>
                   <SelectItem value="supervisor">Supervisor Produksi</SelectItem>
                   <SelectItem value="plant_manager">Plant Manager</SelectItem>
+                  <SelectItem value="ga">Tim General Affair (GA)</SelectItem>
+                  <SelectItem value="purchasing">Tim Purchasing</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -30,6 +30,8 @@ const roleLabels: Record<string, string> = {
   leader: "Leader",
   supervisor: "Supervisor",
   plant_manager: "Plant Manager",
+  ga: "Tim GA",
+  purchasing: "Purchasing",
 };
 
 export function Header({ user, unreadCount, onMenuClick }: HeaderProps) {

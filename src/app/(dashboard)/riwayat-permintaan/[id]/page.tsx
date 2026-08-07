@@ -40,9 +40,14 @@ const statusConfig = {
     className: "bg-amber-100 text-amber-800 border-amber-200",
   },
   disetujui: {
-    label: "Disetujui",
+    label: "Disetujui Supervisor",
     icon: CheckCircle2,
     className: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  },
+  diserahkan: {
+    label: "Barang Diserahkan",
+    icon: CheckCircle2,
+    className: "bg-teal-100 text-teal-800 border-teal-200",
   },
   ditolak: {
     label: "Ditolak",
@@ -464,9 +469,19 @@ export default async function DetailPermintaanPage({
                 </td>
                 <td style={{ border: "none", width: "33.33%", textAlign: "center", verticalAlign: "top", padding: "0 5px", background: "#ffffff" }}>
                   <DigitalSignatureStamp
-                    title="Petugas Logistik / Gudang"
+                    title="Penyerah Barang (GA / Purchasing)"
+                    signerName={request.handedOverByUser?.name}
+                    signerRole={
+                      request.handedOverByUser?.role === "ga"
+                        ? "Tim GA"
+                        : request.handedOverByUser?.role === "purchasing"
+                        ? "Purchasing"
+                        : request.handedOverByUser?.role
+                    }
+                    timestamp={request.handedOverAt}
+                    statusText="DIGITAL HANDOVER VERIFIED"
                     requestId={request.id}
-                    type="warehouse"
+                    type="handover"
                   />
                 </td>
               </tr>

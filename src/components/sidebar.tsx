@@ -18,6 +18,7 @@ import {
   UserCog,
   Database,
   X,
+  PackageCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -45,6 +46,12 @@ const allMenuItems = [
     href: "/antrean-permintaan",
     icon: CheckSquare,
     roles: ["supervisor", "plant_manager"],
+  },
+  {
+    label: "Penyerahan Barang",
+    href: "/penyerahan-barang",
+    icon: PackageCheck,
+    roles: ["ga", "purchasing", "supervisor", "plant_manager"],
   },
   {
     label: "Riwayat Permintaan",
@@ -98,7 +105,7 @@ const allMenuItems = [
     label: "Profil Saya",
     href: "/profil",
     icon: UserCog,
-    roles: ["leader", "supervisor", "plant_manager"],
+    roles: ["leader", "supervisor", "plant_manager", "ga", "purchasing"],
   },
 ];
 

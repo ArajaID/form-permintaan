@@ -43,7 +43,7 @@ export async function addEmployee(data: {
   name: string;
   email: string;
   password: string;
-  role: "leader" | "supervisor" | "plant_manager";
+  role: "leader" | "supervisor" | "plant_manager" | "ga" | "purchasing";
 }) {
   const session = await getSession();
   const currentRole = session.user.role;
@@ -107,7 +107,7 @@ export async function toggleEmployeeStatus(userId: string) {
 
 export async function updateEmployee(
   userId: string,
-  data: { name: string; role?: "leader" | "supervisor" | "plant_manager" }
+  data: { name: string; role?: "leader" | "supervisor" | "plant_manager" | "ga" | "purchasing" }
 ) {
   const session = await getSession();
   const currentRole = session.user.role;
@@ -127,7 +127,7 @@ export async function updateEmployee(
 
   if (!targetUser) throw new Error("Karyawan tidak ditemukan");
 
-  const updateData: { name: string; role?: "leader" | "supervisor" | "plant_manager"; updatedAt: Date } = {
+  const updateData: { name: string; role?: "leader" | "supervisor" | "plant_manager" | "ga" | "purchasing"; updatedAt: Date } = {
     name: data.name.trim(),
     updatedAt: new Date(),
   };

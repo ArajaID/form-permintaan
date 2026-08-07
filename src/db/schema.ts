@@ -11,7 +11,7 @@ export const users = sqliteTable("users", {
   email: text("email").notNull().unique(),
   emailVerified: integer("email_verified", { mode: "boolean" }).notNull().default(false),
   image: text("image"),
-  role: text("role", { enum: ["leader", "supervisor", "plant_manager"] }).notNull().default("leader"),
+  role: text("role", { enum: ["leader", "supervisor", "plant_manager", "ga", "purchasing"] }).notNull().default("leader"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
@@ -75,13 +75,16 @@ export const requests = sqliteTable("requests", {
   requesterId: text("requester_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  status: text("status", { enum: ["menunggu", "disetujui", "ditolak"] })
+  status: text("status", { enum: ["menunggu", "disetujui", "diserahkan", "ditolak"] })
     .notNull()
     .default("menunggu"),
   purpose: text("purpose"),
   reason: text("reason"),
   reviewedBy: text("reviewed_by").references(() => users.id),
   reviewedAt: integer("reviewed_at", { mode: "timestamp" }),
+  handedOverBy: text("handed_over_by").references(() => users.id),
+  handedOverAt: integer("handed_over_at", { mode: "timestamp" }),
+  handoverNote: text("handover_note"),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 });
 
@@ -130,6 +133,7 @@ export const notifications = sqliteTable("notifications", {
 export const usersRelations = relations(users, ({ many }) => ({
   requests: many(requests, { relationName: "requester" }),
   reviewedRequests: many(requests, { relationName: "reviewer" }),
+  handedOverRequests: many(requests, { relationName: "handoverUser" }),
   notifications: many(notifications),
   stockMovements: many(stockMovements),
 }));
@@ -149,6 +153,11 @@ export const requestsRelations = relations(requests, ({ one, many }) => ({
     fields: [requests.reviewedBy],
     references: [users.id],
     relationName: "reviewer",
+  }),
+  handedOverByUser: one(users, {
+    fields: [requests.handedOverBy],
+    references: [users.id],
+    relationName: "handoverUser",
   }),
   requestItems: many(requestItems),
   stockMovements: many(stockMovements),
