@@ -99,7 +99,7 @@ const allMenuItems = [
     label: "Notifikasi",
     href: "/notifikasi",
     icon: Bell,
-    roles: ["leader", "supervisor", "plant_manager"],
+    roles: ["leader", "supervisor", "plant_manager", "ga", "purchasing"],
   },
   {
     label: "Profil Saya",

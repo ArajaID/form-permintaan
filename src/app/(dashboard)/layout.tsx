@@ -9,12 +9,30 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const reqHeaders = await headers();
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: reqHeaders,
   });
 
   if (!session || (session.user as any).isActive === false) {
     redirect("/login?error=deactivated");
+  }
+
+  const role = (session.user as any).role || "leader";
+  const pathname = reqHeaders.get("x-pathname") || "";
+
+  // Strict route authorization check for GA and Purchasing roles
+  if (role === "ga" || role === "purchasing") {
+    // Explicitly forbidden: /dashboard, /stok, /stok-masuk, /stok-keluar, /antrean-permintaan, /buat-permintaan, /riwayat-permintaan, /karyawan, /backup-restore
+    const isAllowed =
+      pathname.startsWith("/penyerahan-barang") ||
+      pathname.startsWith("/profil") ||
+      pathname.startsWith("/notifikasi") ||
+      (pathname.startsWith("/riwayat-permintaan/") && pathname.split("/").length > 2);
+
+    if (!isAllowed) {
+      redirect("/penyerahan-barang");
+    }
   }
 
   const unreadCount = await getUnreadCount();
@@ -24,7 +42,7 @@ export default async function DashboardLayout({
       user={{
         name: session.user.name,
         email: session.user.email,
-        role: (session.user as any).role || "leader",
+        role: role,
       }}
       unreadCount={unreadCount}
     >
