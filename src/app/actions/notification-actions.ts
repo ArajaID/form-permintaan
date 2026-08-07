@@ -18,13 +18,22 @@ async function getSession() {
 export async function getNotifications() {
   const session = await getSession();
 
-  const userNotifications = await db.query.notifications.findMany({
+  const userNotifications = (await db.query.notifications.findMany({
     where: eq(notifications.userId, session.user.id),
     with: {
       request: true,
     },
     orderBy: [desc(notifications.createdAt)],
-  });
+  })) as any[];
+
+  // For GA and Purchasing, only show notifications for requests approved by supervisor
+  if (session.user.role === "ga" || session.user.role === "purchasing") {
+    return userNotifications.filter(
+      (n: any) =>
+        n.request &&
+        (n.request.status === "disetujui" || n.request.status === "diserahkan")
+    );
+  }
 
   return userNotifications;
 }
@@ -71,16 +80,25 @@ export async function getUnreadCount() {
   });
   if (!session) return 0;
 
-  const result = db
-    .select({ count: sql<number>`count(*)` })
-    .from(notifications)
-    .where(
-      and(
-        eq(notifications.userId, session.user.id),
-        eq(notifications.isRead, false)
-      )
-    )
-    .get();
+  const role = (session.user as any)?.role;
 
-  return result?.count ?? 0;
+  const userNotifications = (await db.query.notifications.findMany({
+    where: and(
+      eq(notifications.userId, session.user.id),
+      eq(notifications.isRead, false)
+    ),
+    with: {
+      request: true,
+    },
+  })) as any[];
+
+  if (role === "ga" || role === "purchasing") {
+    return userNotifications.filter(
+      (n: any) =>
+        n.request &&
+        (n.request.status === "disetujui" || n.request.status === "diserahkan")
+    ).length;
+  }
+
+  return userNotifications.length;
 }
