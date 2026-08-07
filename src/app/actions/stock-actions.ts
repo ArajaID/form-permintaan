@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { items, stockMovements } from "@/db/schema";
+import { items, stockMovements, users, requests } from "@/db/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -16,7 +16,7 @@ async function getSession() {
 }
 
 export async function getItems(search?: string, includeInactive: boolean = false) {
-  let allItems = db.select().from(items).orderBy(items.name).all();
+  let allItems = await db.select().from(items).orderBy(items.name);
 
   if (!includeInactive) {
     allItems = allItems.filter((item) => item.isActive);
@@ -40,7 +40,7 @@ export async function addStockIn(
   const session = await getSession();
 
   // Create stock movement
-  db.insert(stockMovements)
+  await db.insert(stockMovements)
     .values({
       itemId,
       type: "masuk",
@@ -48,16 +48,14 @@ export async function addStockIn(
       createdBy: session.user.id,
       note: note || null,
       createdAt: new Date(),
-    })
-    .run();
+    });
 
   // Update item stock
-  db.update(items)
+  await db.update(items)
     .set({
       stock: sql`${items.stock} + ${quantity}`,
     })
-    .where(eq(items.id, itemId))
-    .run();
+    .where(eq(items.id, itemId));
 
   revalidatePath("/stok");
   revalidatePath("/stok-masuk");
@@ -75,12 +73,13 @@ export async function addStockOut(
   const session = await getSession();
 
   // Check stock availability
-  const item = db.select().from(items).where(eq(items.id, itemId)).get();
+  const itemRes = await db.select().from(items).where(eq(items.id, itemId));
+  const item = itemRes[0];
   if (!item) throw new Error("Barang tidak ditemukan");
   if (item.stock < quantity) throw new Error("Stok tidak mencukupi");
 
   // Create stock movement
-  db.insert(stockMovements)
+  await db.insert(stockMovements)
     .values({
       itemId,
       type: "keluar",
@@ -89,16 +88,14 @@ export async function addStockOut(
       createdBy: session.user.id,
       note: note || null,
       createdAt: new Date(),
-    })
-    .run();
+    });
 
   // Update item stock
-  db.update(items)
+  await db.update(items)
     .set({
       stock: sql`${items.stock} - ${quantity}`,
     })
-    .where(eq(items.id, itemId))
-    .run();
+    .where(eq(items.id, itemId));
 
   revalidatePath("/stok");
   revalidatePath("/stok-keluar");
@@ -111,14 +108,25 @@ export async function getStockMovements(
   type?: "masuk" | "keluar",
   search?: string
 ) {
-  const movements = await db.query.stockMovements.findMany({
-    with: {
-      item: true,
-      createdByUser: true,
-      request: true,
-    },
-    orderBy: [desc(stockMovements.createdAt)],
-  }) as any[];
+  const rawMovements = await db
+    .select({
+      movement: stockMovements,
+      item: items,
+      createdByUser: users,
+      request: requests,
+    })
+    .from(stockMovements)
+    .innerJoin(items, eq(stockMovements.itemId, items.id))
+    .innerJoin(users, eq(stockMovements.createdBy, users.id))
+    .leftJoin(requests, eq(stockMovements.requestId, requests.id))
+    .orderBy(desc(stockMovements.createdAt));
+
+  const movements = rawMovements.map((row) => ({
+    ...row.movement,
+    item: row.item,
+    createdByUser: row.createdByUser,
+    request: row.request,
+  }));
 
   let filtered = movements;
 
@@ -145,12 +153,13 @@ export async function createItem(name: string, unit: string) {
     throw new Error("Hanya Supervisor dan Plant Manager yang dapat menambah barang");
   }
 
-  const existing = db.select().from(items).where(eq(items.name, name.trim())).get();
+  const existingRes = await db.select().from(items).where(eq(items.name, name.trim()));
+  const existing = existingRes[0];
   if (existing) {
     throw new Error("Barang dengan nama tersebut sudah ada");
   }
 
-  const newItem = db
+  const insertRes = await db
     .insert(items)
     .values({
       name: name.trim(),
@@ -158,9 +167,11 @@ export async function createItem(name: string, unit: string) {
       stock: 0,
       isActive: true,
       createdAt: new Date(),
-    })
-    .returning()
-    .get();
+    });
+
+  const insertedId = (insertRes as any)[0]?.insertId ?? (insertRes as any).insertId;
+  const newItemRes = await db.select().from(items).where(eq(items.id, Number(insertedId)));
+  const newItem = newItemRes[0];
 
   revalidatePath("/stok");
   revalidatePath("/buat-permintaan");
@@ -175,13 +186,12 @@ export async function updateItem(id: number, name: string, unit: string) {
     throw new Error("Hanya Supervisor dan Plant Manager yang dapat mengedit barang");
   }
 
-  db.update(items)
+  await db.update(items)
     .set({
       name: name.trim(),
       unit: unit.trim(),
     })
-    .where(eq(items.id, id))
-    .run();
+    .where(eq(items.id, id));
 
   revalidatePath("/stok");
   revalidatePath("/buat-permintaan");
@@ -196,17 +206,17 @@ export async function toggleItemStatus(id: number) {
     throw new Error("Hanya Supervisor dan Plant Manager yang dapat mengubah status barang");
   }
 
-  const item = db.select().from(items).where(eq(items.id, id)).get();
+  const itemRes = await db.select().from(items).where(eq(items.id, id));
+  const item = itemRes[0];
   if (!item) throw new Error("Barang tidak ditemukan");
 
   const newStatus = !item.isActive;
 
-  db.update(items)
+  await db.update(items)
     .set({
       isActive: newStatus,
     })
-    .where(eq(items.id, id))
-    .run();
+    .where(eq(items.id, id));
 
   revalidatePath("/stok");
   revalidatePath("/buat-permintaan");
@@ -219,17 +229,28 @@ export async function getItemStockCard(
   startDate?: string,
   endDate?: string
 ) {
-  const item = db.select().from(items).where(eq(items.id, itemId)).get();
+  const itemRes = await db.select().from(items).where(eq(items.id, itemId));
+  const item = itemRes[0];
   if (!item) throw new Error("Barang tidak ditemukan");
 
-  const allMovements = (await db.query.stockMovements.findMany({
-    where: eq(stockMovements.itemId, itemId),
-    with: {
-      createdByUser: true,
-      request: true,
-    },
-    orderBy: [stockMovements.createdAt],
-  })) as any[];
+  const rawMovements = await db
+    .select({
+      movement: stockMovements,
+      createdByUser: users,
+      request: requests,
+    })
+    .from(stockMovements)
+    .innerJoin(users, eq(stockMovements.createdBy, users.id))
+    .leftJoin(requests, eq(stockMovements.requestId, requests.id))
+    .where(eq(stockMovements.itemId, itemId))
+    .orderBy(stockMovements.createdAt);
+
+  const allMovements = rawMovements.map((row) => ({
+    ...row.movement,
+    createdByUser: row.createdByUser,
+    request: row.request,
+  }));
+
 
   let openingBalance = 0;
   let periodMovements = allMovements;
@@ -289,3 +310,4 @@ export async function getItemStockCard(
     ledger,
   };
 }
+

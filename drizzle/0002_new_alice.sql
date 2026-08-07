@@ -1,1 +1,0 @@
-ALTER TABLE `items` ADD `is_active` integer DEFAULT true NOT NULL;

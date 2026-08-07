@@ -43,7 +43,7 @@ export function BackupRestoreClient() {
           byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
         const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: "application/x-sqlite3" });
+        const blob = new Blob([byteArray], { type: "application/json" });
 
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -66,8 +66,8 @@ export function BackupRestoreClient() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file) {
-      if (!file.name.endsWith(".db") && !file.name.endsWith(".sqlite")) {
-        toast.error("Format file harus ber-ekstensi .db atau .sqlite");
+      if (!file.name.endsWith(".json")) {
+        toast.error("Format file harus ber-ekstensi .json");
         setSelectedFile(null);
         return;
       }
@@ -115,7 +115,7 @@ export function BackupRestoreClient() {
               Backup & Restore Database
             </h1>
             <p className="text-slate-300 text-sm mt-1">
-              Pengelolaan cadangan file SQLite untuk memulihkan atau menyimpan snapshot data sistem.
+              Pengelolaan cadangan file JSON MariaDB untuk memulihkan atau menyimpan snapshot data sistem.
             </p>
           </div>
         </div>
@@ -136,15 +136,15 @@ export function BackupRestoreClient() {
               Backup Database
             </CardTitle>
             <CardDescription className="text-slate-500 text-sm">
-              Unduh cadangan data lengkap berupa file `.db` yang dapat disimpan secara offline.
+              Unduh cadangan data lengkap berupa file `.json` yang dapat disimpan secara offline.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs text-slate-600 space-y-2">
               <p className="font-medium text-slate-800">Catatan Backup:</p>
               <ul className="list-disc pl-4 space-y-1">
-                <li>Menghasilkan snapshot database SQLite terkini secara aman.</li>
-                <li>Format file: <code className="bg-slate-200 px-1 py-0.5 rounded">.db</code></li>
+                <li>Menghasilkan snapshot database MariaDB terkini secara aman.</li>
+                <li>Format file: <code className="bg-slate-200 px-1 py-0.5 rounded">.json</code></li>
                 <li>Dapat digunakan kapan saja untuk keperluan restore.</li>
               </ul>
             </div>
@@ -162,7 +162,7 @@ export function BackupRestoreClient() {
               ) : (
                 <>
                   <Download className="w-4 h-4" />
-                  <span>Unduh File Backup (.db)</span>
+                  <span>Unduh File Backup (.json)</span>
                 </>
               )}
             </Button>
@@ -179,7 +179,7 @@ export function BackupRestoreClient() {
               Restore Database
             </CardTitle>
             <CardDescription className="text-slate-500 text-sm">
-              Pulihkan database dari file cadangan <code className="bg-slate-100 px-1 py-0.5 rounded text-amber-700 font-mono text-xs">.db</code> sebelumnya.
+              Pulihkan database dari file cadangan <code className="bg-slate-100 px-1 py-0.5 rounded text-amber-700 font-mono text-xs">.json</code> sebelumnya.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -196,12 +196,12 @@ export function BackupRestoreClient() {
             {/* File Input */}
             <div className="space-y-2">
               <label className="block text-xs font-medium text-slate-700">
-                Pilih File Backup (.db atau .sqlite)
+                Pilih File Backup (.json)
               </label>
               <div className="flex items-center gap-2">
                 <input
                   type="file"
-                  accept=".db,.sqlite"
+                  accept=".json"
                   onChange={handleFileChange}
                   className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer border border-slate-200 rounded-xl"
                 />

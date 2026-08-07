@@ -1,25 +1,18 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { db } from "./index";
 import * as schema from "./schema";
-import path from "path";
 import { auth } from "../lib/auth";
 import { ne, eq } from "drizzle-orm";
-
-const sqlite = new Database(path.join(process.cwd(), "local.db"));
-sqlite.pragma("journal_mode = WAL");
-sqlite.pragma("foreign_keys = ON");
-const db = drizzle(sqlite, { schema });
 
 async function seed() {
   console.log("🌱 Seeding database...\n");
 
   // 1. Clear items, requests, movements, notifications
   try {
-    db.delete(schema.requestItems).run();
-    db.delete(schema.stockMovements).run();
-    db.delete(schema.notifications).run();
-    db.delete(schema.requests).run();
-    db.delete(schema.items).run();
+    await db.delete(schema.requestItems);
+    await db.delete(schema.stockMovements);
+    await db.delete(schema.notifications);
+    await db.delete(schema.requests);
+    await db.delete(schema.items);
     console.log("🗑️  Semua data barang, permintaan, dan pergerakan stok berhasil dihapus.");
   } catch (err: any) {
     console.log("⚠️ Error clearing items tables:", err?.message || err);
@@ -27,17 +20,16 @@ async function seed() {
 
   // 2. Clear all users EXCEPT arajatech@gmail.com
   try {
-    const usersToDelete = db
+    const usersToDelete = await db
       .select({ id: schema.users.id, email: schema.users.email })
       .from(schema.users)
-      .where(ne(schema.users.email, "arajatech@gmail.com"))
-      .all();
+      .where(ne(schema.users.email, "arajatech@gmail.com"));
 
     for (const u of usersToDelete) {
-      db.delete(schema.sessions).where(eq(schema.sessions.userId, u.id)).run();
-      db.delete(schema.accounts).where(eq(schema.accounts.userId, u.id)).run();
+      await db.delete(schema.sessions).where(eq(schema.sessions.userId, u.id));
+      await db.delete(schema.accounts).where(eq(schema.accounts.userId, u.id));
     }
-    db.delete(schema.users).where(ne(schema.users.email, "arajatech@gmail.com")).run();
+    await db.delete(schema.users).where(ne(schema.users.email, "arajatech@gmail.com"));
     console.log(`🗑️  ${usersToDelete.length} user lain berhasil dihapus (hanya menyisakan arajatech@gmail.com).`);
   } catch (err: any) {
     console.log("⚠️ Error deleting other users:", err?.message || err);
@@ -51,21 +43,20 @@ async function seed() {
     role: "plant_manager",
   };
 
-  const existing = db
+  const existingUsers = await db
     .select()
     .from(schema.users)
-    .where(eq(schema.users.email, user.email))
-    .get();
+    .where(eq(schema.users.email, user.email));
+  const existing = existingUsers[0];
 
   if (existing) {
-    db.update(schema.users)
+    await db.update(schema.users)
       .set({
         role: "plant_manager",
         isActive: true,
         updatedAt: new Date(),
       })
-      .where(eq(schema.users.email, user.email))
-      .run();
+      .where(eq(schema.users.email, user.email));
     console.log(`✅ User existing diupdate ke plant_manager: ${user.email}`);
   } else {
     try {
@@ -95,9 +86,10 @@ async function seed() {
   ];
 
   for (const u of additionalUsers) {
-    const ex = db.select().from(schema.users).where(eq(schema.users.email, u.email)).get();
+    const exList = await db.select().from(schema.users).where(eq(schema.users.email, u.email));
+    const ex = exList[0];
     if (ex) {
-      db.update(schema.users).set({ role: u.role, isActive: true, updatedAt: new Date() }).where(eq(schema.users.email, u.email)).run();
+      await db.update(schema.users).set({ role: u.role, isActive: true, updatedAt: new Date() }).where(eq(schema.users.email, u.email));
       console.log(`✅ User existing diupdate: ${u.email} (${u.role})`);
     } else {
       try {
@@ -122,3 +114,4 @@ seed().catch((err) => {
   console.error("❌ Seed error:", err);
   process.exit(1);
 });
+

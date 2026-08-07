@@ -1,8 +1,10 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/db";
-import { requests, items, stockMovements, notifications } from "@/db/schema";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { requests, items } from "@/db/schema";
+import { eq, desc, sql } from "drizzle-orm";
+import { getRequests } from "@/app/actions/request-actions";
+import { getStockMovements } from "@/app/actions/stock-actions";
 import {
   Card,
   CardContent,
@@ -34,52 +36,39 @@ export default async function DashboardPage() {
   }
 
   // Stats
-  const totalItems = db
+  const totalItemsRes = await db
     .select({ count: sql<number>`count(*)` })
-    .from(items)
-    .get();
+    .from(items);
+  const totalItems = { count: Number(totalItemsRes[0]?.count ?? 0) };
 
-  const pendingRequests = db
-    .select({ count: sql<number>`count(*)` })
-    .from(requests)
-    .where(eq(requests.status, "menunggu"))
-    .get();
-
-  const approvedRequests = db
+  const pendingRequestsRes = await db
     .select({ count: sql<number>`count(*)` })
     .from(requests)
-    .where(eq(requests.status, "disetujui"))
-    .get();
+    .where(eq(requests.status, "menunggu"));
+  const pendingRequests = { count: Number(pendingRequestsRes[0]?.count ?? 0) };
 
-  const rejectedRequests = db
+  const approvedRequestsRes = await db
     .select({ count: sql<number>`count(*)` })
     .from(requests)
-    .where(eq(requests.status, "ditolak"))
-    .get();
+    .where(eq(requests.status, "disetujui"));
+  const approvedRequests = { count: Number(approvedRequestsRes[0]?.count ?? 0) };
 
-  const lowStockItems = db
+  const rejectedRequestsRes = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(requests)
+    .where(eq(requests.status, "ditolak"));
+  const rejectedRequests = { count: Number(rejectedRequestsRes[0]?.count ?? 0) };
+
+  const lowStockItems = await db
     .select()
     .from(items)
-    .where(sql`${items.stock} <= 5`)
-    .all();
+    .where(sql`${items.stock} <= 5`);
 
-  const recentRequests = await db.query.requests.findMany({
-    with: {
-      requester: true,
-      requestItems: { with: { item: true } },
-    },
-    orderBy: [desc(requests.createdAt)],
-    limit: 5,
-  });
+  const allRequests = await getRequests();
+  const recentRequests = allRequests.slice(0, 5);
 
-  const recentMovements = await db.query.stockMovements.findMany({
-    with: {
-      item: true,
-      createdByUser: true,
-    },
-    orderBy: [desc(stockMovements.createdAt)],
-    limit: 5,
-  });
+  const allMovements = await getStockMovements();
+  const recentMovements = allMovements.slice(0, 5);
 
   const stats = [
     {

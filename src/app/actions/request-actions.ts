@@ -9,7 +9,7 @@ import {
   stockMovements,
   users,
 } from "@/db/schema";
-import { eq, desc, sql, or } from "drizzle-orm";
+import { eq, desc, sql, or, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -22,59 +22,112 @@ async function getSession() {
   return session;
 }
 
+async function fetchFullRequests(whereClause?: any) {
+  const reqList = await db.select().from(requests).where(whereClause).orderBy(desc(requests.createdAt));
+  if (reqList.length === 0) return [];
+
+  const reqIds = reqList.map((r) => r.id);
+  const userIds = Array.from(
+    new Set(
+      reqList
+        .flatMap((r) => [r.requesterId, r.reviewedBy, r.handedOverBy])
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+
+  const userList = userIds.length > 0
+    ? await db.select().from(users).where(inArray(users.id, userIds))
+    : [];
+  const userMap = new Map(userList.map((u) => [u.id, u]));
+
+  const rawReqItems = await db
+    .select({
+      reqItem: requestItems,
+      item: items,
+    })
+    .from(requestItems)
+    .innerJoin(items, eq(requestItems.itemId, items.id))
+    .where(inArray(requestItems.requestId, reqIds));
+
+  const itemsMap = new Map<number, any[]>();
+  for (const row of rawReqItems) {
+    const list = itemsMap.get(row.reqItem.requestId) || [];
+    list.push({
+      ...row.reqItem,
+      item: row.item,
+    });
+    itemsMap.set(row.reqItem.requestId, list);
+  }
+
+  return reqList.map((r) => ({
+    ...r,
+    requester: userMap.get(r.requesterId) || {
+      id: r.requesterId,
+      name: "Pengguna " + r.requesterId,
+      email: "-",
+      emailVerified: false,
+      image: null,
+      role: "leader" as const,
+      isActive: true,
+      createdAt: r.createdAt,
+      updatedAt: r.createdAt,
+    },
+    reviewer: r.reviewedBy ? userMap.get(r.reviewedBy) || null : null,
+    handedOverByUser: r.handedOverBy ? userMap.get(r.handedOverBy) || null : null,
+    requestItems: itemsMap.get(r.id) || [],
+  }));
+}
+
 export async function createRequest(
   itemsList: { itemId: number; quantity: number; note?: string }[],
   purpose: string
 ) {
   const session = await getSession();
 
-  const newRequest = db
+  const reqResult = await db
     .insert(requests)
     .values({
       requesterId: session.user.id,
       status: "menunggu",
       purpose,
       createdAt: new Date(),
-    })
-    .returning()
-    .get();
+    });
+
+  const newRequestId = Number((reqResult as any)[0]?.insertId ?? (reqResult as any).insertId);
 
   for (const item of itemsList) {
-    db.insert(requestItems)
+    await db.insert(requestItems)
       .values({
-        requestId: newRequest.id,
+        requestId: newRequestId,
         itemId: item.itemId,
         quantity: item.quantity,
         note: item.note || null,
-      })
-      .run();
+      });
   }
 
   // Notify supervisors and plant managers
-  const approvers = db
+  const approvers = await db
     .select()
     .from(users)
     .where(
       or(eq(users.role, "supervisor"), eq(users.role, "plant_manager"))
-    )
-    .all();
+    );
 
   for (const approver of approvers) {
-    db.insert(notifications)
+    await db.insert(notifications)
       .values({
         userId: approver.id,
         message: `Permintaan baru dari ${session.user.name}: ${purpose}`,
-        requestId: newRequest.id,
+        requestId: newRequestId,
         createdAt: new Date(),
-      })
-      .run();
+      });
   }
 
   revalidatePath("/antrean-permintaan");
   revalidatePath("/riwayat-permintaan");
   revalidatePath("/notifikasi");
 
-  return { success: true, requestId: newRequest.id };
+  return { success: true, requestId: newRequestId };
 }
 
 export async function approveRequest(requestId: number, reason?: string) {
@@ -86,37 +139,35 @@ export async function approveRequest(requestId: number, reason?: string) {
     throw new Error("Tidak memiliki izin");
   }
 
-  const request = db
+  const requestRes = await db
     .select()
     .from(requests)
-    .where(eq(requests.id, requestId))
-    .get();
+    .where(eq(requests.id, requestId));
+  const request = requestRes[0];
 
   if (!request) throw new Error("Permintaan tidak ditemukan");
   if (request.status !== "menunggu")
     throw new Error("Permintaan sudah diproses");
 
-  db.update(requests)
+  await db.update(requests)
     .set({
       status: "disetujui",
       reason: reason || null,
       reviewedBy: session.user.id,
       reviewedAt: new Date(),
     })
-    .where(eq(requests.id, requestId))
-    .run();
+    .where(eq(requests.id, requestId));
 
   // Notify requester & handover teams (GA / Purchasing)
-  db.insert(notifications)
+  await db.insert(notifications)
     .values({
       userId: request.requesterId,
       message: `Permintaan Anda telah disetujui oleh ${session.user.name}${reason ? `: ${reason}` : ""}`,
       requestId: requestId,
       createdAt: new Date(),
-    })
-    .run();
+    });
 
-  const handoverTeams = db
+  const handoverTeams = await db
     .select()
     .from(users)
     .where(
@@ -125,18 +176,16 @@ export async function approveRequest(requestId: number, reason?: string) {
         eq(users.role, "purchasing"),
         eq(users.role, "plant_manager")
       )
-    )
-    .all();
+    );
 
   for (const teamMember of handoverTeams) {
-    db.insert(notifications)
+    await db.insert(notifications)
       .values({
         userId: teamMember.id,
         message: `Permintaan #${requestId} telah disetujui supervisor dan siap diserahkan`,
         requestId: requestId,
         createdAt: new Date(),
-      })
-      .run();
+      });
   }
 
   revalidatePath("/antrean-permintaan");
@@ -155,16 +204,8 @@ export async function handoverRequest(requestId: number, note?: string) {
     throw new Error("Tidak memiliki izin untuk menyerahkan barang");
   }
 
-  const request = (await db.query.requests.findFirst({
-    where: eq(requests.id, requestId),
-    with: {
-      requestItems: {
-        with: {
-          item: true,
-        },
-      },
-    },
-  })) as any;
+  const fullList = await fetchFullRequests(eq(requests.id, requestId));
+  const request = fullList[0];
 
   if (!request) throw new Error("Permintaan tidak ditemukan");
   if (request.status !== "disetujui") {
@@ -174,19 +215,18 @@ export async function handoverRequest(requestId: number, note?: string) {
   const now = new Date();
 
   // Update status to diserahkan
-  db.update(requests)
+  await db.update(requests)
     .set({
       status: "diserahkan",
       handedOverBy: session.user.id,
       handedOverAt: now,
       handoverNote: note || null,
     })
-    .where(eq(requests.id, requestId))
-    .run();
+    .where(eq(requests.id, requestId));
 
   // Record stock movement (keluar) and deduct stock
   for (const ri of request.requestItems) {
-    db.insert(stockMovements)
+    await db.insert(stockMovements)
       .values({
         itemId: ri.itemId,
         type: "keluar",
@@ -195,15 +235,13 @@ export async function handoverRequest(requestId: number, note?: string) {
         note: `Penyerahan barang produksi #${requestId}${note ? ` (${note})` : ""}`,
         createdBy: session.user.id,
         createdAt: now,
-      })
-      .run();
+      });
 
-    db.update(items)
+    await db.update(items)
       .set({
         stock: sql`${items.stock} - ${ri.quantity}`,
       })
-      .where(eq(items.id, ri.itemId))
-      .run();
+      .where(eq(items.id, ri.itemId));
   }
 
   // Notify requester
@@ -214,14 +252,13 @@ export async function handoverRequest(requestId: number, note?: string) {
       ? "Purchasing"
       : "Petugas";
 
-  db.insert(notifications)
+  await db.insert(notifications)
     .values({
       userId: request.requesterId,
       message: `Barang permintaan #${requestId} telah diserahkan oleh ${session.user.name} (${roleLabel})`,
       requestId: requestId,
       createdAt: now,
-    })
-    .run();
+    });
 
   revalidatePath("/penyerahan-barang");
   revalidatePath("/antrean-permintaan");
@@ -243,35 +280,33 @@ export async function rejectRequest(requestId: number, reason: string) {
     throw new Error("Tidak memiliki izin");
   }
 
-  const request = db
+  const requestRes = await db
     .select()
     .from(requests)
-    .where(eq(requests.id, requestId))
-    .get();
+    .where(eq(requests.id, requestId));
+  const request = requestRes[0];
 
   if (!request) throw new Error("Permintaan tidak ditemukan");
   if (request.status !== "menunggu")
     throw new Error("Permintaan sudah diproses");
 
-  db.update(requests)
+  await db.update(requests)
     .set({
       status: "ditolak",
       reason,
       reviewedBy: session.user.id,
       reviewedAt: new Date(),
     })
-    .where(eq(requests.id, requestId))
-    .run();
+    .where(eq(requests.id, requestId));
 
   // Notify requester
-  db.insert(notifications)
+  await db.insert(notifications)
     .values({
       userId: request.requesterId,
       message: `Permintaan Anda ditolak oleh ${session.user.name}: ${reason}`,
       requestId: requestId,
       createdAt: new Date(),
-    })
-    .run();
+    });
 
   revalidatePath("/antrean-permintaan");
   revalidatePath("/riwayat-permintaan");
@@ -288,25 +323,13 @@ export async function getRequests(filters?: {
 }) {
   const session = await getSession();
 
-  const allRequests = (await db.query.requests.findMany({
-    with: {
-      requester: true,
-      reviewer: true,
-      handedOverByUser: true,
-      requestItems: {
-        with: {
-          item: true,
-        },
-      },
-    },
-    orderBy: [desc(requests.createdAt)],
-  })) as any[];
-
-  let filtered = allRequests;
-
+  let condition = undefined;
   if (filters?.myOnly) {
-    filtered = filtered.filter((r: any) => r.requesterId === session.user.id);
+    condition = eq(requests.requesterId, session.user.id);
   }
+
+  const allRequests = await fetchFullRequests(condition);
+  let filtered = allRequests;
 
   if (filters?.status) {
     filtered = filtered.filter((r: any) => r.status === filters.status);
@@ -316,7 +339,7 @@ export async function getRequests(filters?: {
     const search = filters.search.toLowerCase();
     filtered = filtered.filter(
       (r: any) =>
-        r.requester.name.toLowerCase().includes(search) ||
+        r.requester?.name?.toLowerCase().includes(search) ||
         r.purpose?.toLowerCase().includes(search) ||
         r.requestItems.some((ri: any) =>
           ri.item.name.toLowerCase().includes(search)
@@ -328,39 +351,26 @@ export async function getRequests(filters?: {
 }
 
 export async function getRequestById(requestId: number) {
-  const request = await db.query.requests.findFirst({
-    where: eq(requests.id, requestId),
-    with: {
-      requester: true,
-      reviewer: true,
-      handedOverByUser: true,
-      requestItems: {
-        with: {
-          item: true,
-        },
-      },
-    },
-  });
-
-  return request as any;
+  const fullList = await fetchFullRequests(eq(requests.id, requestId));
+  return fullList[0] || null;
 }
 
 export async function getPendingRequestsCount() {
-  const result = db
+  const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(requests)
-    .where(eq(requests.status, "menunggu"))
-    .get();
+    .where(eq(requests.status, "menunggu"));
 
-  return result?.count ?? 0;
+  return Number(result[0]?.count ?? 0);
 }
 
 export async function getApprovedRequestsCount() {
-  const result = db
+  const result = await db
     .select({ count: sql<number>`count(*)` })
     .from(requests)
-    .where(eq(requests.status, "disetujui"))
-    .get();
+    .where(eq(requests.status, "disetujui"));
 
-  return result?.count ?? 0;
+  return Number(result[0]?.count ?? 0);
 }
+
+

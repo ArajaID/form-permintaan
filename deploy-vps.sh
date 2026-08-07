@@ -11,10 +11,14 @@ echo -e "${CYAN}================================================================
 echo -e "${CYAN}   AUTO DEPLOYMENT SCRIPT (Ubuntu 22.04 LTS + Cloudflare Tunnel)    ${NC}"
 echo -e "${CYAN}====================================================================${NC}"
 
-# 1. Update sistem & install build tools
-echo -e "\n${YELLOW}[1/6] Updating system & installing build tools (build-essential)...${NC}"
+# 1. Update sistem & install build tools & MariaDB
+echo -e "\n${YELLOW}[1/6] Updating system & installing build tools & MariaDB...${NC}"
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y curl git build-essential python3
+sudo apt install -y curl git build-essential python3 mariadb-server mariadb-client
+
+# Ensure MariaDB is running
+sudo systemctl enable mariadb || true
+sudo systemctl start mariadb || true
 
 # 2. Install Node.js 20 LTS & PM2
 echo -e "\n${YELLOW}[2/6] Checking & Installing Node.js 20 LTS & PM2...${NC}"
@@ -32,8 +36,8 @@ if ! command -v cloudflared &> /dev/null; then
     rm -f cloudflared.deb
 fi
 
-# 4. Setup file .env
-echo -e "\n${YELLOW}[4/6] Setting up environment variables (.env)...${NC}"
+# 4. Setup MariaDB Database & file .env
+echo -e "\n${YELLOW}[4/6] Setting up MariaDB & environment variables (.env)...${NC}"
 if [ ! -f .env ]; then
     read -p "Masukkan URL Domain Cloudflare Anda (contoh: https://form.domainanda.com): " RAW_URL
     # Remove trailing slash
@@ -45,10 +49,17 @@ if [ ! -f .env ]; then
         APP_URL="${RAW_URL}"
     fi
 
+    read -p "Masukkan MariaDB Connection URL (Default: mysql://root:@127.0.0.1:3306/form_permintaan): " DB_URL_INPUT
+    if [ -z "$DB_URL_INPUT" ]; then
+        DB_URL_INPUT="mysql://root:@127.0.0.1:3306/form_permintaan"
+        # Create default database if local root
+        sudo mysql -e "CREATE DATABASE IF NOT EXISTS form_permintaan;" || true
+    fi
+
     SECRET_KEY=$(openssl rand -hex 32 2>/dev/null || echo "secret_$(date +%s)_key")
 
     cat <<EOF > .env
-DATABASE_URL=file:./local.db
+DATABASE_URL=${DB_URL_INPUT}
 BETTER_AUTH_SECRET=${SECRET_KEY}
 BETTER_AUTH_URL=${APP_URL}
 NODE_ENV=production
@@ -64,14 +75,6 @@ npm ci
 npx drizzle-kit push
 npx tsx src/db/seed.ts || true
 npm run build
-
-# Ensure SQLite database & WAL files have proper read/write permissions
-echo -e "\n${YELLOW}[5.5/6] Setting database read/write permissions...${NC}"
-touch local.db
-chmod 666 local.db local.db-wal local.db-shm 2>/dev/null || true
-if [ -n "$SUDO_USER" ]; then
-    chown $SUDO_USER:$SUDO_USER local.db local.db-wal local.db-shm 2>/dev/null || true
-fi
 
 # 6. PM2 Process Start
 echo -e "\n${YELLOW}[6/6] Starting application with PM2...${NC}"

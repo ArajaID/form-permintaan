@@ -81,11 +81,11 @@ export async function toggleEmployeeStatus(userId: string) {
     throw new Error("Anda tidak dapat menonaktifkan akun sendiri");
   }
 
-  const targetUser = await db
+  const targetUserRes = await db
     .select()
     .from(users)
-    .where(eq(users.id, userId))
-    .get();
+    .where(eq(users.id, userId));
+  const targetUser = targetUserRes[0];
 
   if (!targetUser) throw new Error("Karyawan tidak ditemukan");
 
@@ -97,8 +97,7 @@ export async function toggleEmployeeStatus(userId: string) {
       isActive: newStatus,
       updatedAt: new Date(),
     })
-    .where(eq(users.id, userId))
-    .run();
+    .where(eq(users.id, userId));
 
   revalidatePath("/karyawan");
 
@@ -119,11 +118,11 @@ export async function updateEmployee(
     throw new Error("Nama karyawan wajib diisi");
   }
 
-  const targetUser = await db
+  const targetUserRes = await db
     .select()
     .from(users)
-    .where(eq(users.id, userId))
-    .get();
+    .where(eq(users.id, userId));
+  const targetUser = targetUserRes[0];
 
   if (!targetUser) throw new Error("Karyawan tidak ditemukan");
 
@@ -139,8 +138,7 @@ export async function updateEmployee(
   await db
     .update(users)
     .set(updateData)
-    .where(eq(users.id, userId))
-    .run();
+    .where(eq(users.id, userId));
 
   revalidatePath("/karyawan");
 
