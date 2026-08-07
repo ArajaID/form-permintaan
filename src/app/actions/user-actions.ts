@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { users } from "@/db/schema";
-import { eq, desc, like, or } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -151,7 +151,7 @@ export async function updatePassword(data: {
   currentPassword: string;
   newPassword: string;
 }) {
-  const session = await getSession();
+  await getSession();
 
   if (!data.currentPassword || !data.newPassword) {
     throw new Error("Password lama dan password baru wajib diisi");

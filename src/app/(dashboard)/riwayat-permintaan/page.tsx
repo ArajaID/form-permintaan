@@ -37,6 +37,7 @@ import {
   User,
   Package,
   Printer,
+  PackageCheck,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -52,6 +53,11 @@ const statusConfig = {
     label: "Disetujui",
     icon: CheckCircle2,
     badgeClass: "bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100",
+  },
+  diserahkan: {
+    label: "Diserahkan",
+    icon: PackageCheck,
+    badgeClass: "bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-100",
   },
   ditolak: {
     label: "Ditolak",
@@ -86,6 +92,7 @@ export default function RiwayatPermintaanPage() {
 
   const pendingCount = requests.filter((r) => r.status === "menunggu").length;
   const approvedCount = requests.filter((r) => r.status === "disetujui").length;
+  const handedOverCount = requests.filter((r) => r.status === "diserahkan").length;
   const rejectedCount = requests.filter((r) => r.status === "ditolak").length;
 
   return (
@@ -123,6 +130,7 @@ export default function RiwayatPermintaanPage() {
               <SelectItem value="semua">Semua Status</SelectItem>
               <SelectItem value="menunggu">Menunggu</SelectItem>
               <SelectItem value="disetujui">Disetujui</SelectItem>
+              <SelectItem value="diserahkan">Diserahkan</SelectItem>
               <SelectItem value="ditolak">Ditolak</SelectItem>
             </SelectContent>
           </Select>
@@ -138,6 +146,9 @@ export default function RiwayatPermintaanPage() {
           </span>
           <span className="bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-full border border-emerald-200">
             Disetujui: {approvedCount}
+          </span>
+          <span className="bg-teal-50 text-teal-800 px-3 py-1.5 rounded-full border border-teal-200">
+            Diserahkan: {handedOverCount}
           </span>
           <span className="bg-red-50 text-red-800 px-3 py-1.5 rounded-full border border-red-200">
             Ditolak: {rejectedCount}
@@ -270,7 +281,7 @@ export default function RiwayatPermintaanPage() {
                                 Detail
                               </Button>
                             </Link>
-                            {req.status === "disetujui" && (
+                            {(req.status === "disetujui" || req.status === "diserahkan") && (
                               <Link href={`/riwayat-permintaan/${req.id}?print=true`}>
                                 <Button
                                   size="sm"

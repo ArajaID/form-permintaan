@@ -60,530 +60,282 @@ export function OfficialRequestPrintForm({ request }: OfficialRequestPrintFormPr
     }
   };
 
+  const formattedCreatedDate = new Date(request.createdAt).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  const formattedCreatedTime = new Date(request.createdAt).toLocaleTimeString("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const printDateStr = new Date().toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const tableHeaderBg = "#f1f5f9";
+  const cellBorderStyle = "1px solid #000000";
+  const tableBorderStyle = "1.5px solid #000000";
+
   return (
     <div
       style={{
         fontFamily: "Arial, Helvetica, sans-serif",
         width: "100%",
-        margin: "0",
-        padding: "0",
+        boxSizing: "border-box",
         background: "#ffffff",
         color: "#000000",
+        fontSize: "9.5pt",
+        lineHeight: "1.4",
+        padding: "2px",
       }}
     >
       {/* Kop Surat Perusahaan */}
       <div
         style={{
-          borderBottom: "3px double #000",
-          paddingBottom: "10px",
-          marginBottom: "16px",
+          borderBottom: "3px double #000000",
+          paddingBottom: "8px",
+          marginBottom: "14px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-          }}
-        >
-          <div>
-            <h1
-              style={{
-                fontSize: "16pt",
-                fontWeight: "bold",
-                margin: "0",
-                letterSpacing: "0.5px",
-                color: "#000",
-              }}
-            >
-              PT UNINDO AJIDHARMA INDUSTRY
-            </h1>
-            <p style={{ fontSize: "8.5pt", color: "#555", margin: "2px 0 0 0" }}>
-              Divisi Manufaktur & Sistem Permintaan Barang Produksi
-            </p>
-          </div>
-          <div style={{ textAlign: "right" }}>
-            <h2
-              style={{
-                fontSize: "12pt",
-                fontWeight: "bold",
-                margin: "0",
-                textTransform: "uppercase",
-                textDecoration: "underline",
-              }}
-            >
-              FORM PERMINTAAN BARANG PRODUKSI
-            </h2>
-            <p
-              style={{
-                fontSize: "9.5pt",
-                fontWeight: "bold",
-                margin: "4px 0 0 0",
-                color: "#000",
-              }}
-            >
-              No. Registrasi: NGR-REQ-#{request.id}
-            </p>
-            <p style={{ fontSize: "8pt", color: "#444", margin: "2px 0 0 0" }}>
-              Tgl Cetak:{" "}
-              {new Date().toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}{" "}
-              WIB
-            </p>
-          </div>
+        <div>
+          <h1
+            style={{
+              fontSize: "12.5pt",
+              fontWeight: "bold",
+              margin: "0",
+              letterSpacing: "0.3px",
+              color: "#000000",
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+            }}
+          >
+            PT UNINDO AJIDHARMA INDUSTRY
+          </h1>
+          <p style={{ fontSize: "8.5pt", color: "#444444", margin: "2px 0 0 0" }}>
+            Divisi Manufaktur &amp; Sistem Permintaan Barang Produksi
+          </p>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <h2
+            style={{
+              fontSize: "11pt",
+              fontWeight: "bold",
+              margin: "0",
+              textTransform: "uppercase",
+              textDecoration: "underline",
+              color: "#000000",
+            }}
+          >
+            FORM PERMINTAAN BARANG PRODUKSI
+          </h2>
+          <p style={{ fontSize: "9pt", fontWeight: "bold", margin: "3px 0 0 0", color: "#000000" }}>
+            No. Registrasi: NGR-REQ-#{request.id}
+          </p>
+          <p style={{ fontSize: "8pt", color: "#555555", margin: "1px 0 0 0" }}>
+            Tgl Cetak: {printDateStr} WIB
+          </p>
         </div>
       </div>
 
-      {/* Structured Information Grid */}
-      <div style={{ marginBottom: "16px" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            fontSize: "9pt",
-            border: "1.5px solid #000",
-            background: "#ffffff",
-          }}
-        >
-          <tbody>
+      {/* Structured Information Table */}
+      <table
+        style={{
+          width: "100%",
+          tableLayout: "fixed",
+          borderCollapse: "collapse",
+          border: tableBorderStyle,
+          boxSizing: "border-box",
+          fontSize: "8.5pt",
+          marginBottom: "14px",
+          background: "#ffffff",
+        }}
+      >
+        <tbody>
+          <tr>
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", width: "18%", fontWeight: "bold", background: tableHeaderBg, boxSizing: "border-box" }}>
+              No. Permintaan
+            </td>
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", width: "32%", fontWeight: "bold", boxSizing: "border-box" }}>
+              NGR-REQ-#{request.id}
+            </td>
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", width: "18%", fontWeight: "bold", background: tableHeaderBg, boxSizing: "border-box" }}>
+              Tanggal Pengajuan
+            </td>
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", width: "32%", boxSizing: "border-box" }}>
+              {formattedCreatedDate} ({formattedCreatedTime} WIB)
+            </td>
+          </tr>
+          <tr>
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", fontWeight: "bold", background: tableHeaderBg, boxSizing: "border-box" }}>
+              Pemohon (Leader)
+            </td>
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", boxSizing: "border-box" }}>
+              {request.requester.name} ({request.requester.email})
+            </td>
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", fontWeight: "bold", background: tableHeaderBg, boxSizing: "border-box" }}>
+              Status Dokumen
+            </td>
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", fontWeight: "bold", textTransform: "uppercase", boxSizing: "border-box" }}>
+              {getStatusLabel(request.status)}
+            </td>
+          </tr>
+          <tr>
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", fontWeight: "bold", background: tableHeaderBg, boxSizing: "border-box" }}>
+              Keperluan Produksi
+            </td>
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", boxSizing: "border-box" }}>
+              {request.purpose || "-"}
+            </td>
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", fontWeight: "bold", background: tableHeaderBg, boxSizing: "border-box" }}>
+              Penyetuju (Supervisor/PM)
+            </td>
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", boxSizing: "border-box" }}>
+              {request.reviewer ? `${request.reviewer.name} (${request.reviewer.email})` : "-"}
+            </td>
+          </tr>
+          {request.reviewedAt && (
             <tr>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px 8px",
-                  width: "18%",
-                  fontWeight: "bold",
-                  background: "#ffffff",
-                }}
-              >
-                No. Permintaan
+              <td style={{ border: cellBorderStyle, padding: "5px 8px", fontWeight: "bold", background: tableHeaderBg, boxSizing: "border-box" }}>
+                Tanggal Persetujuan
               </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px 8px",
-                  width: "32%",
-                  fontWeight: "bold",
-                  background: "#ffffff",
-                }}
-              >
-                NGR-REQ-#{request.id}
+              <td style={{ border: cellBorderStyle, padding: "5px 8px", boxSizing: "border-box" }}>
+                {new Date(request.reviewedAt).toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
               </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px 8px",
-                  width: "18%",
-                  fontWeight: "bold",
-                  background: "#ffffff",
-                }}
-              >
-                Tanggal Pengajuan
+              <td style={{ border: cellBorderStyle, padding: "5px 8px", fontWeight: "bold", background: tableHeaderBg, boxSizing: "border-box" }}>
+                Catatan Keputusan
               </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px 8px",
-                  width: "32%",
-                  background: "#ffffff",
-                }}
-              >
-                {new Date(request.createdAt).toLocaleDateString("id-ID", {
+              <td style={{ border: cellBorderStyle, padding: "5px 8px", boxSizing: "border-box" }}>
+                {request.reason || "-"}
+              </td>
+            </tr>
+          )}
+          {request.handedOverAt && (
+            <tr>
+              <td style={{ border: cellBorderStyle, padding: "5px 8px", fontWeight: "bold", background: tableHeaderBg, boxSizing: "border-box" }}>
+                Waktu Penyerahan
+              </td>
+              <td style={{ border: cellBorderStyle, padding: "5px 8px", boxSizing: "border-box" }}>
+                {new Date(request.handedOverAt).toLocaleDateString("id-ID", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
                 })}{" "}
                 (
-                {new Date(request.createdAt).toLocaleTimeString("id-ID", {
+                {new Date(request.handedOverAt).toLocaleTimeString("id-ID", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}{" "}
                 WIB)
               </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px 8px",
-                  fontWeight: "bold",
-                  background: "#ffffff",
-                }}
-              >
-                Pemohon (Leader)
+              <td style={{ border: cellBorderStyle, padding: "5px 8px", fontWeight: "bold", background: tableHeaderBg, boxSizing: "border-box" }}>
+                Petugas Penyerah
               </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px 8px",
-                  background: "#ffffff",
-                }}
-              >
-                {request.requester.name} ({request.requester.email})
-              </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px 8px",
-                  fontWeight: "bold",
-                  background: "#ffffff",
-                }}
-              >
-                Status Document
-              </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px 8px",
-                  fontWeight: "bold",
-                  textTransform: "uppercase",
-                  background: "#ffffff",
-                }}
-              >
-                {getStatusLabel(request.status)}
-              </td>
-            </tr>
-            <tr>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px 8px",
-                  fontWeight: "bold",
-                  background: "#ffffff",
-                }}
-              >
-                Keperluan Produksi
-              </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px 8px",
-                  background: "#ffffff",
-                }}
-              >
-                {request.purpose || "-"}
-              </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px 8px",
-                  fontWeight: "bold",
-                  background: "#ffffff",
-                }}
-              >
-                Penyetuju (Supervisor/PM)
-              </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px 8px",
-                  background: "#ffffff",
-                }}
-              >
-                {request.reviewer
-                  ? `${request.reviewer.name} (${request.reviewer.email})`
+              <td style={{ border: cellBorderStyle, padding: "5px 8px", boxSizing: "border-box" }}>
+                {request.handedOverByUser
+                  ? `${request.handedOverByUser.name} (${
+                      request.handedOverByUser.role === "ga"
+                        ? "Tim GA"
+                        : request.handedOverByUser.role === "purchasing"
+                        ? "Purchasing"
+                        : request.handedOverByUser.role
+                    })`
                   : "-"}
               </td>
             </tr>
-            {request.reviewedAt && (
-              <tr>
-                <td
-                  style={{
-                    border: "1.5px solid #000",
-                    padding: "6px 8px",
-                    fontWeight: "bold",
-                    background: "#ffffff",
-                  }}
-                >
-                  Tanggal Persetujuan
-                </td>
-                <td
-                  style={{
-                    border: "1.5px solid #000",
-                    padding: "6px 8px",
-                    background: "#ffffff",
-                  }}
-                >
-                  {new Date(request.reviewedAt).toLocaleDateString("id-ID", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </td>
-                <td
-                  style={{
-                    border: "1.5px solid #000",
-                    padding: "6px 8px",
-                    fontWeight: "bold",
-                    background: "#ffffff",
-                  }}
-                >
-                  Catatan Keputusan
-                </td>
-                <td
-                  style={{
-                    border: "1.5px solid #000",
-                    padding: "6px 8px",
-                    background: "#ffffff",
-                  }}
-                >
-                  {request.reason || "-"}
-                </td>
-              </tr>
-            )}
-            {request.handedOverAt && (
-              <tr>
-                <td
-                  style={{
-                    border: "1.5px solid #000",
-                    padding: "6px 8px",
-                    fontWeight: "bold",
-                    background: "#ffffff",
-                  }}
-                >
-                  Waktu Penyerahan
-                </td>
-                <td
-                  style={{
-                    border: "1.5px solid #000",
-                    padding: "6px 8px",
-                    background: "#ffffff",
-                  }}
-                >
-                  {new Date(request.handedOverAt).toLocaleDateString("id-ID", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}{" "}
-                  (
-                  {new Date(request.handedOverAt).toLocaleTimeString("id-ID", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}{" "}
-                  WIB)
-                </td>
-                <td
-                  style={{
-                    border: "1.5px solid #000",
-                    padding: "6px 8px",
-                    fontWeight: "bold",
-                    background: "#ffffff",
-                  }}
-                >
-                  Petugas Penyerah (GA/Purchasing)
-                </td>
-                <td
-                  style={{
-                    border: "1.5px solid #000",
-                    padding: "6px 8px",
-                    background: "#ffffff",
-                  }}
-                >
-                  {request.handedOverByUser
-                    ? `${request.handedOverByUser.name} (${
-                        request.handedOverByUser.role === "ga"
-                          ? "Tim GA"
-                          : request.handedOverByUser.role === "purchasing"
-                          ? "Purchasing"
-                          : request.handedOverByUser.role
-                      })`
-                    : "-"}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+          )}
+        </tbody>
+      </table>
 
       {/* Goods Detail Table */}
-      <div style={{ marginBottom: "6px", fontWeight: "bold", fontSize: "9.5pt" }}>
+      <div style={{ marginBottom: "5px", fontWeight: "bold", fontSize: "9pt" }}>
         RINCIAN BARANG PRODUKSI YANG DIMINTA:
       </div>
       <table
         style={{
           width: "100%",
+          tableLayout: "fixed",
           borderCollapse: "collapse",
-          fontSize: "9pt",
-          marginBottom: "25px",
+          border: tableBorderStyle,
+          boxSizing: "border-box",
+          fontSize: "8.5pt",
+          marginBottom: "20px",
           background: "#ffffff",
         }}
       >
         <thead>
-          <tr style={{ background: "#ffffff" }}>
-            <th
-              style={{
-                border: "1.5px solid #000",
-                padding: "6px",
-                width: "35px",
-                textAlign: "center",
-                background: "#ffffff",
-              }}
-            >
+          <tr style={{ background: tableHeaderBg }}>
+            <th style={{ border: cellBorderStyle, padding: "5px", width: "6%", textAlign: "center", boxSizing: "border-box" }}>
               NO
             </th>
-            <th
-              style={{
-                border: "1.5px solid #000",
-                padding: "6px",
-                textAlign: "left",
-                background: "#ffffff",
-              }}
-            >
+            <th style={{ border: cellBorderStyle, padding: "5px 8px", width: "34%", textAlign: "left", boxSizing: "border-box" }}>
               NAMA BARANG PRODUKSI
             </th>
-            <th
-              style={{
-                border: "1.5px solid #000",
-                padding: "6px",
-                width: "80px",
-                textAlign: "center",
-                background: "#ffffff",
-              }}
-            >
+            <th style={{ border: cellBorderStyle, padding: "5px", width: "12%", textAlign: "center", boxSizing: "border-box" }}>
               SATUAN
             </th>
-            <th
-              style={{
-                border: "1.5px solid #000",
-                padding: "6px",
-                width: "110px",
-                textAlign: "right",
-                background: "#ffffff",
-              }}
-            >
+            <th style={{ border: cellBorderStyle, padding: "5px 8px", width: "18%", textAlign: "right", boxSizing: "border-box" }}>
               JUMLAH DIMINTA
             </th>
-            <th
-              style={{
-                border: "1.5px solid #000",
-                padding: "6px",
-                textAlign: "left",
-                background: "#ffffff",
-              }}
-            >
+            <th style={{ border: cellBorderStyle, padding: "5px 8px", width: "30%", textAlign: "left", boxSizing: "border-box" }}>
               CATATAN / SPESIFIKASI KHUSUS
             </th>
           </tr>
         </thead>
         <tbody>
           {request.requestItems.map((ri, idx) => (
-            <tr key={ri.id} style={{ background: "#ffffff" }}>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px",
-                  textAlign: "center",
-                  background: "#ffffff",
-                }}
-              >
+            <tr key={ri.id}>
+              <td style={{ border: cellBorderStyle, padding: "5px", textAlign: "center", boxSizing: "border-box" }}>
                 {idx + 1}
               </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px",
-                  fontWeight: "bold",
-                  background: "#ffffff",
-                }}
-              >
+              <td style={{ border: cellBorderStyle, padding: "5px 8px", fontWeight: "bold", boxSizing: "border-box", wordBreak: "break-word" }}>
                 {ri.item.name}
               </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px",
-                  textAlign: "center",
-                  background: "#ffffff",
-                }}
-              >
+              <td style={{ border: cellBorderStyle, padding: "5px", textAlign: "center", boxSizing: "border-box" }}>
                 {ri.item.unit}
               </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px",
-                  textAlign: "right",
-                  fontWeight: "bold",
-                  background: "#ffffff",
-                }}
-              >
+              <td style={{ border: cellBorderStyle, padding: "5px 8px", textAlign: "right", fontWeight: "bold", boxSizing: "border-box" }}>
                 {ri.quantity} {ri.item.unit}
               </td>
-              <td
-                style={{
-                  border: "1.5px solid #000",
-                  padding: "6px",
-                  background: "#ffffff",
-                }}
-              >
+              <td style={{ border: cellBorderStyle, padding: "5px 8px", boxSizing: "border-box", wordBreak: "break-word" }}>
                 {ri.note || "-"}
               </td>
             </tr>
           ))}
         </tbody>
         <tfoot>
-          <tr style={{ background: "#ffffff", fontWeight: "bold" }}>
-            <td
-              colSpan={3}
-              style={{
-                border: "1.5px solid #000",
-                padding: "6px 8px",
-                textAlign: "right",
-                background: "#ffffff",
-              }}
-            >
+          <tr style={{ fontWeight: "bold", background: tableHeaderBg }}>
+            <td colSpan={3} style={{ border: cellBorderStyle, padding: "5px 8px", textAlign: "right", boxSizing: "border-box" }}>
               TOTAL REKAPITULASI:
             </td>
-            <td
-              style={{
-                border: "1.5px solid #000",
-                padding: "6px 8px",
-                textAlign: "right",
-                background: "#ffffff",
-              }}
-            >
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", textAlign: "right", boxSizing: "border-box" }}>
               {totalQuantity} Unit
             </td>
-            <td
-              style={{
-                border: "1.5px solid #000",
-                padding: "6px 8px",
-                background: "#ffffff",
-              }}
-            >
+            <td style={{ border: cellBorderStyle, padding: "5px 8px", boxSizing: "border-box" }}>
               ({totalItemsCount} Jenis Barang)
             </td>
           </tr>
         </tfoot>
       </table>
 
-      {/* 3-Party Signatures Block - Digital Signature Stamps */}
-      <div style={{ marginTop: "30px", pageBreakInside: "avoid" }}>
-        <table
-          style={{
-            width: "100%",
-            border: "none",
-            borderCollapse: "collapse",
-            background: "#ffffff",
-          }}
-        >
+      {/* 3-Party Signatures Block */}
+      <div style={{ marginTop: "24px", pageBreakInside: "avoid" }}>
+        <table className="no-border-table" style={{ width: "100%", tableLayout: "fixed", border: "none", borderCollapse: "collapse" }}>
           <tbody>
             <tr>
-              <td
-                style={{
-                  border: "none",
-                  width: "33.33%",
-                  textAlign: "center",
-                  verticalAlign: "top",
-                  padding: "0 5px",
-                  background: "#ffffff",
-                }}
-              >
+              <td style={{ border: "none", width: "33.33%", textAlign: "center", verticalAlign: "top", padding: "0 4px" }}>
                 <DigitalSignatureStamp
                   title="Pemohon (Production Leader)"
                   signerName={request.requester.name}
@@ -594,16 +346,7 @@ export function OfficialRequestPrintForm({ request }: OfficialRequestPrintFormPr
                   type="requester"
                 />
               </td>
-              <td
-                style={{
-                  border: "none",
-                  width: "33.33%",
-                  textAlign: "center",
-                  verticalAlign: "top",
-                  padding: "0 5px",
-                  background: "#ffffff",
-                }}
-              >
+              <td style={{ border: "none", width: "33.33%", textAlign: "center", verticalAlign: "top", padding: "0 4px" }}>
                 <DigitalSignatureStamp
                   title="Penyetuju (Supervisor / PM)"
                   signerName={request.reviewer?.name}
@@ -620,18 +363,9 @@ export function OfficialRequestPrintForm({ request }: OfficialRequestPrintFormPr
                   type="reviewer"
                 />
               </td>
-              <td
-                style={{
-                  border: "none",
-                  width: "33.33%",
-                  textAlign: "center",
-                  verticalAlign: "top",
-                  padding: "0 5px",
-                  background: "#ffffff",
-                }}
-              >
+              <td style={{ border: "none", width: "33.34%", textAlign: "center", verticalAlign: "top", padding: "0 4px" }}>
                 <DigitalSignatureStamp
-                  title="Penyerah Barang (GA / Purchasing)"
+                  title="Penyerah Barang"
                   signerName={request.handedOverByUser?.name}
                   signerRole={
                     request.handedOverByUser?.role === "ga"
@@ -654,11 +388,11 @@ export function OfficialRequestPrintForm({ request }: OfficialRequestPrintFormPr
       {/* Footer info */}
       <div
         style={{
-          marginTop: "25px",
-          borderTop: "1px solid #ddd",
-          paddingTop: "6px",
+          marginTop: "20px",
+          borderTop: "1px solid #cccccc",
+          paddingTop: "5px",
           fontSize: "7.5pt",
-          color: "#666",
+          color: "#555555",
           textAlign: "center",
         }}
       >

@@ -23,7 +23,6 @@ export default async function DashboardLayout({
 
   // Strict route authorization check for GA and Purchasing roles
   if (role === "ga" || role === "purchasing") {
-    // Explicitly forbidden: /dashboard, /stok, /stok-masuk, /stok-keluar, /antrean-permintaan, /buat-permintaan, /riwayat-permintaan, /karyawan, /backup-restore
     const isAllowed =
       pathname.startsWith("/penyerahan-barang") ||
       pathname.startsWith("/profil") ||

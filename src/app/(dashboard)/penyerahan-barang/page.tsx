@@ -63,10 +63,15 @@ export default function PenyerahanBarangPage() {
   const [handoverNote, setHandoverNote] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Print Modal State
-  const [printModalRequest, setPrintModalRequest] = useState<RequestData | null>(null);
-  const [printDialogOpen, setPrintDialogOpen] = useState(false);
+  // Direct Print State
+  const [printingRequest, setPrintingRequest] = useState<RequestData | null>(null);
 
+  const handleDirectPrint = (req: RequestData) => {
+    setPrintingRequest(req);
+    setTimeout(() => {
+      window.print();
+    }, 100);
+  };
   useEffect(() => {
     loadData();
   }, [search]);
@@ -112,7 +117,8 @@ export default function PenyerahanBarangPage() {
   const [activeTab, setActiveTab] = useState<"ready" | "completed">("ready");
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-10">
+    <>
+    <div className="space-y-6 max-w-6xl mx-auto pb-10 no-print">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -296,10 +302,7 @@ export default function PenyerahanBarangPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          setPrintModalRequest(req);
-                          setPrintDialogOpen(true);
-                        }}
+                        onClick={() => handleDirectPrint(req)}
                         className="text-xs rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold shadow-xs cursor-pointer"
                       >
                         <Printer className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
@@ -364,6 +367,8 @@ export default function PenyerahanBarangPage() {
           )}
         </div>
       )}
+
+      </div>
 
       {/* Handover Modal */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -440,69 +445,10 @@ export default function PenyerahanBarangPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Print Preview Modal */}
-      <Dialog open={printDialogOpen} onOpenChange={setPrintDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl p-6 shadow-2xl">
-          <DialogHeader className="border-b border-slate-100 pb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-emerald-600" />
-                  Form Resmi Permintaan & Penyerahan Barang
-                </DialogTitle>
-                <DialogDescription className="text-xs text-slate-500 mt-1">
-                  Pratinjau dokumen resmi A4 beserta stempel TTD Digital 3 pihak (Pemohon, Supervisor, & GA/Purchasing).
-                </DialogDescription>
-              </div>
-              {printModalRequest && (
-                <Button
-                  onClick={() => window.print()}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 self-start sm:self-auto cursor-pointer"
-                >
-                  <Printer className="w-4 h-4 mr-2" />
-                  Cetak PDF Sekarang
-                </Button>
-              )}
-            </div>
-          </DialogHeader>
-
-          {printModalRequest && (
-            <div className="py-4 bg-slate-50 p-6 rounded-xl border border-slate-200 overflow-x-auto">
-              <OfficialRequestPrintForm request={printModalRequest} />
-            </div>
-          )}
-
-          <DialogFooter className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:justify-between items-center gap-3">
-            <p className="text-xs text-slate-400">
-              *Klik &quot;Cetak PDF Sekarang&quot; untuk mengunduh atau mencetak dokumen resmi A4.
-            </p>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setPrintDialogOpen(false)}
-                className="rounded-xl border-slate-300 font-semibold cursor-pointer"
-              >
-                Tutup
-              </Button>
-              {printModalRequest && (
-                <Button
-                  onClick={() => window.print()}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md shadow-emerald-600/20 cursor-pointer"
-                >
-                  <Printer className="w-4 h-4 mr-2" />
-                  Cetak PDF
-                </Button>
-              )}
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Formal A4 Document Layout for Print */}
       <div className="print-only">
-        {printModalRequest && <OfficialRequestPrintForm request={printModalRequest} />}
+        {printingRequest && <OfficialRequestPrintForm request={printingRequest} />}
       </div>
-    </div>
+    </>
   );
 }

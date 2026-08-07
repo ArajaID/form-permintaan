@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/db";
-import { items, stockMovements, users } from "@/db/schema";
-import { eq, desc, like, sql } from "drizzle-orm";
+import { items, stockMovements } from "@/db/schema";
+import { eq, desc, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";

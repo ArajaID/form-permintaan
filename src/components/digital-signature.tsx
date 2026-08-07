@@ -21,7 +21,7 @@ export function DigitalSignatureStamp({
   timestamp,
   statusText = "VERIFIED DIGITAL SIGNATURE",
   requestId,
-  type,
+  type: _type,
 }: DigitalSignatureProps) {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
 
@@ -80,11 +80,9 @@ export function DigitalSignatureStamp({
         {title}
       </p>
 
-      {/* Digital Stamp Box - Centered QR Code */}
+      {/* Digital Stamp - No Box */}
       <div
         style={{
-          border: "1.5px solid #000",
-          borderRadius: "4px",
           padding: "8px 10px",
           background: "#ffffff",
           margin: "0 auto",
@@ -94,7 +92,6 @@ export function DigitalSignatureStamp({
           alignItems: "center",
           justifyContent: "center",
           textAlign: "center",
-          boxShadow: "none",
         }}
       >
         {/* Centered QR Code Image */}
@@ -102,7 +99,7 @@ export function DigitalSignatureStamp({
           <img
             src={qrCodeDataUrl}
             alt="QR Code Verifikasi Tanda Tangan"
-            style={{ width: "64px", height: "64px", display: "block", margin: "0 auto 4px auto", borderRadius: "2px" }}
+            style={{ width: "64px", height: "64px", display: "block", margin: "0 auto 4px auto" }}
           />
         ) : (
           <div style={{ width: "64px", height: "64px", border: "1px solid #ccc", background: "#f9f9f9", margin: "0 auto 4px auto" }} />

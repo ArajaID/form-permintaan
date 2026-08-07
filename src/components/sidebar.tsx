@@ -8,7 +8,6 @@ import {
   ClipboardList,
   CheckSquare,
   History,
-  BarChart3,
   ArrowDownToLine,
   ArrowUpFromLine,
   FileText,

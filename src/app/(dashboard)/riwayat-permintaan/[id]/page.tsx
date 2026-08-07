@@ -28,10 +28,30 @@ import {
   ShieldCheck,
   Tag,
   Boxes,
+  PackageCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { PrintButton } from "./print-button";
 import { OfficialRequestPrintForm } from "@/components/official-request-print-form";
+
+function formatFullDateTime(date?: Date | string | null) {
+  if (!date) return "-";
+  const d = new Date(date);
+  return (
+    d.toLocaleDateString("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }) +
+    ", " +
+    d.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }) +
+    " WIB"
+  );
+}
 
 const statusConfig = {
   menunggu: {
@@ -88,6 +108,15 @@ export default async function DetailPermintaanPage({
         .slice(0, 2)
     : "";
 
+  const handoverInitials = request.handedOverByUser
+    ? request.handedOverByUser.name
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "";
+
   const totalItemsCount = request.requestItems.length;
   const totalQuantity = request.requestItems.reduce(
     (sum: number, ri: any) => sum + ri.quantity,
@@ -136,38 +165,33 @@ export default async function DetailPermintaanPage({
         </CardHeader>
 
         <CardContent className="pt-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Pemohon Column */}
             <div className="space-y-4">
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
                   Informasi Pemohon
                 </p>
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 min-h-[64px]">
                   <Avatar className="w-10 h-10">
                     <AvatarFallback className="bg-blue-600 text-white font-bold text-sm">
                       {requesterInitials}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <p className="font-bold text-sm text-slate-900">{request.requester.name}</p>
-                    <p className="text-xs text-slate-500">{request.requester.email}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-sm text-slate-900 truncate">{request.requester.name}</p>
+                    <p className="text-xs text-slate-500 truncate">{request.requester.email}</p>
                   </div>
                 </div>
               </div>
 
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                  Tanggal Pengajuan
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Waktu Pengajuan
                 </p>
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                  <Calendar className="w-4 h-4 text-blue-600" />
-                  {new Date(request.createdAt).toLocaleDateString("id-ID", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-800 bg-slate-50 p-3 rounded-xl border border-slate-100 min-h-[46px]">
+                  <Calendar className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                  <span>{formatFullDateTime(request.createdAt)}</span>
                 </div>
               </div>
             </div>
@@ -179,40 +203,42 @@ export default async function DetailPermintaanPage({
                   Informasi Keputusan Atasan
                 </p>
                 {request.reviewer ? (
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 min-h-[64px]">
                     <Avatar className="w-10 h-10">
                       <AvatarFallback className="bg-purple-600 text-white font-bold text-sm">
                         {reviewerInitials}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-bold text-sm text-slate-900">{request.reviewer.name}</p>
-                      <p className="text-xs text-slate-500">{request.reviewer.email}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-sm text-slate-900 truncate">{request.reviewer.name}</p>
+                      <p className="text-xs text-slate-500 truncate">{request.reviewer.email}</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="p-3 rounded-xl bg-amber-50/50 border border-amber-100 text-amber-800 text-xs">
+                  <div className="p-3 rounded-xl bg-amber-50/50 border border-amber-100 text-amber-800 text-xs min-h-[64px] flex items-center">
                     Permintaan ini sedang menunggu pemeriksaan dari Supervisor atau Plant Manager.
                   </div>
                 )}
               </div>
 
-              {request.reviewedAt && (
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                    Tanggal Keputusan
-                  </p>
-                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    {new Date(request.reviewedAt).toLocaleDateString("id-ID", {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  </div>
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Waktu Keputusan
+                </p>
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-800 bg-slate-50 p-3 rounded-xl border border-slate-100 min-h-[46px]">
+                  {request.reviewedAt ? (
+                    <>
+                      <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                      <span>{formatFullDateTime(request.reviewedAt)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                      <span className="text-slate-500 italic font-normal">Belum ada keputusan</span>
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
 
               {request.reason && (
                 <div>
@@ -224,6 +250,51 @@ export default async function DetailPermintaanPage({
                   </p>
                 </div>
               )}
+            </div>
+
+            {/* Penyerah Barang Column */}
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Informasi Penyerahan Barang
+                </p>
+                {request.handedOverByUser ? (
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 min-h-[64px]">
+                    <Avatar className="w-10 h-10">
+                      <AvatarFallback className="bg-teal-600 text-white font-bold text-sm">
+                        {handoverInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-sm text-slate-900 truncate">{request.handedOverByUser.name}</p>
+                      <p className="text-xs text-slate-500 truncate">{request.handedOverByUser.email}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 text-xs italic min-h-[64px] flex items-center">
+                    Belum diserahkan oleh penyerah barang.
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  Waktu Penyerahan
+                </p>
+                <div className="flex items-center gap-2 text-xs font-semibold text-slate-800 bg-slate-50 p-3 rounded-xl border border-slate-100 min-h-[46px]">
+                  {request.handedOverAt ? (
+                    <>
+                      <PackageCheck className="w-4 h-4 text-teal-600 flex-shrink-0" />
+                      <span>{formatFullDateTime(request.handedOverAt)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                      <span className="text-slate-500 italic font-normal">Belum diserahkan</span>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>

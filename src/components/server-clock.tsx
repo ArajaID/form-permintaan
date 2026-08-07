@@ -31,12 +31,11 @@ export function ServerClock() {
   }, []);
 
   useEffect(() => {
-    if (!serverTime) return;
     const timer = setInterval(() => {
       setServerTime(new Date(Date.now() + offset));
     }, 1000);
     return () => clearInterval(timer);
-  }, [offset, serverTime !== null]);
+  }, [offset]);
 
   if (!serverTime) {
     return (

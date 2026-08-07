@@ -7,18 +7,18 @@ import { Printer } from "lucide-react";
 
 export function PrintButton({ status }: { status: string }) {
   const searchParams = useSearchParams();
-  const isApproved = status === "disetujui";
+  const isPrintable = status === "disetujui" || status === "diserahkan";
 
   useEffect(() => {
-    if (searchParams.get("print") === "true" && isApproved) {
+    if (searchParams.get("print") === "true" && isPrintable) {
       const timer = setTimeout(() => {
         window.print();
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [searchParams, isApproved]);
+  }, [searchParams, isPrintable]);
 
-  if (!isApproved) {
+  if (!isPrintable) {
     return null;
   }
 

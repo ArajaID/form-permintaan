@@ -1,10 +1,7 @@
 import { getRequestById } from "@/app/actions/request-actions";
-import { notFound } from "next/navigation";
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,8 +10,6 @@ import {
   XCircle,
   ShieldCheck,
   Calendar,
-  User,
-  Package,
   Boxes,
   Building2,
   FileCheck2,
@@ -238,7 +233,7 @@ export default async function VerifikasiDokumenPage({
               <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm space-y-2">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                   <span className="text-xs font-bold text-slate-500 uppercase">
-                    3. Penyerah Barang (GA/Purchasing)
+                    3. Penyerah Barang
                   </span>
                   {request.status === "diserahkan" ? (
                     <ShieldCheck className="w-4 h-4 text-emerald-600" />
@@ -274,7 +269,7 @@ export default async function VerifikasiDokumenPage({
                   </>
                 ) : (
                   <div className="text-xs text-slate-500 italic py-3">
-                    Belum diserahkan oleh GA/Purchasing.
+                    Belum diserahkan oleh penyerah barang.
                   </div>
                 )}
               </div>
