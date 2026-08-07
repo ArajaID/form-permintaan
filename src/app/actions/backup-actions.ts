@@ -72,12 +72,23 @@ export async function restoreDatabaseBackup(formData: FormData) {
 
     // Test database integrity
     const tempDb = new Database(tempRestorePath);
-    const checkResult = tempDb.pragma("integrity_check") as { integrity_check?: string }[];
-    if (checkResult && checkResult[0] && checkResult[0].integrity_check !== "ok") {
+    const integrity = tempDb.pragma("integrity_check", { simple: true });
+    if (integrity !== "ok") {
       tempDb.close();
       if (fs.existsSync(tempRestorePath)) fs.unlinkSync(tempRestorePath);
       throw new Error("File backup rusak atau bukan database SQLite yang valid");
     }
+
+    // Auto-migrate schema on restored database if columns from newer updates are missing
+    try {
+      tempDb.exec("ALTER TABLE requests ADD COLUMN handed_over_by TEXT;");
+    } catch {}
+    try {
+      tempDb.exec("ALTER TABLE requests ADD COLUMN handed_over_at INTEGER;");
+    } catch {}
+    try {
+      tempDb.exec("ALTER TABLE requests ADD COLUMN handover_note TEXT;");
+    } catch {}
 
     // Backup tempDb over main local.db
     sqlite.pragma("wal_checkpoint(TRUNCATE)");
