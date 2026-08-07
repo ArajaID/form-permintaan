@@ -27,8 +27,7 @@ export default async function DashboardLayout({
     const isAllowed =
       pathname.startsWith("/penyerahan-barang") ||
       pathname.startsWith("/profil") ||
-      pathname.startsWith("/notifikasi") ||
-      (pathname.startsWith("/riwayat-permintaan/") && pathname.split("/").length > 2);
+      pathname.startsWith("/notifikasi");
 
     if (!isAllowed) {
       redirect("/penyerahan-barang");
