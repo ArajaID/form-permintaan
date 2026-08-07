@@ -24,8 +24,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
-
 import { redirect } from "next/navigation";
+import { AIMotivationalCard } from "@/components/ai-motivational-card";
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -128,6 +128,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* AI Workplace Motivational Quote Card */}
+      <AIMotivationalCard userName={session?.user?.name || "Karyawan"} />
+
       {/* Page Title */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>

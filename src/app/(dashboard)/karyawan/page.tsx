@@ -83,7 +83,7 @@ export default function KaryawanPage() {
   // Add Dialog State
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [nik, setNik] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"leader" | "supervisor" | "plant_manager" | "ga" | "purchasing">("leader");
   const [showPassword, setShowPassword] = useState(false);
@@ -94,6 +94,7 @@ export default function KaryawanPage() {
     employee: EmployeeData | null;
   }>({ open: false, employee: null });
   const [editName, setEditName] = useState("");
+  const [editNik, setEditNik] = useState("");
   const [editRole, setEditRole] = useState<"leader" | "supervisor" | "plant_manager" | "ga" | "purchasing">("leader");
 
   // Toggle Confirm Dialog State
@@ -119,18 +120,18 @@ export default function KaryawanPage() {
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !password) {
-      toast.error("Semua kolom wajib diisi");
+    if (!name.trim() || !nik.trim()) {
+      toast.error("Nama dan NIK Karyawan wajib diisi");
       return;
     }
 
     startTransition(async () => {
       try {
-        await addEmployee({ name, email, password, role });
-        toast.success(`Karyawan ${name} berhasil ditambahkan!`);
+        await addEmployee({ name, nik, password, role });
+        toast.success(`Karyawan ${name} (NIK: ${nik}) berhasil ditambahkan!`);
         setAddDialogOpen(false);
         setName("");
-        setEmail("");
+        setNik("");
         setPassword("");
         setRole("leader");
         loadEmployees();
@@ -142,6 +143,7 @@ export default function KaryawanPage() {
 
   const openEditModal = (emp: EmployeeData) => {
     setEditName(emp.name);
+    setEditNik(emp.nik || emp.username || "");
     setEditRole(emp.role as any);
     setEditDialog({ open: true, employee: emp });
   };
@@ -149,8 +151,8 @@ export default function KaryawanPage() {
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editDialog.employee) return;
-    if (!editName.trim()) {
-      toast.error("Nama karyawan wajib diisi");
+    if (!editName.trim() || !editNik.trim()) {
+      toast.error("Nama dan NIK karyawan wajib diisi");
       return;
     }
 
@@ -158,6 +160,7 @@ export default function KaryawanPage() {
       try {
         await updateEmployee(editDialog.employee!.id, {
           name: editName,
+          nik: editNik,
           role: editRole,
         });
         toast.success(`Data karyawan ${editName} berhasil diperbarui!`);
@@ -256,7 +259,7 @@ export default function KaryawanPage() {
       <div className="relative max-w-md">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <Input
-          placeholder="Cari nama, email, atau jabatan karyawan..."
+          placeholder="Cari nama, NIK, atau jabatan karyawan..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10 shadow-xs border-slate-200 focus-visible:ring-blue-600 rounded-xl py-2.5"
@@ -316,9 +319,8 @@ export default function KaryawanPage() {
                               <p className="font-bold text-sm text-slate-900">
                                 {emp.name}
                               </p>
-                              <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                                <Mail className="w-3 h-3 text-slate-400" />
-                                {emp.email}
+                              <p className="text-xs text-slate-500 font-mono font-medium mt-0.5">
+                                NIK: {emp.nik || emp.username || emp.email}
                               </p>
                             </div>
                           </div>
@@ -431,15 +433,15 @@ export default function KaryawanPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="add-email" className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Alamat Email
+              <Label htmlFor="add-nik" className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                NIK Karyawan
               </Label>
               <Input
-                id="add-email"
-                type="email"
-                placeholder="budi@unindo.co.id"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="add-nik"
+                type="text"
+                placeholder="800000"
+                value={nik}
+                onChange={(e) => setNik(e.target.value)}
                 className="rounded-xl border-slate-200"
                 required
               />
@@ -453,11 +455,10 @@ export default function KaryawanPage() {
                 <Input
                   id="add-password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Min 6 karakter..."
+                  placeholder="Sama dengan NIK jika kosong..."
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pr-10 rounded-xl border-slate-200"
-                  required
                 />
                 <button
                   type="button"
@@ -530,7 +531,7 @@ export default function KaryawanPage() {
               Edit Data Karyawan
             </DialogTitle>
             <DialogDescription>
-              Ubah nama lengkap dan jabatan untuk akun {editDialog.employee?.email}
+              Ubah nama lengkap, NIK, dan jabatan untuk karyawan {editDialog.employee?.name}
             </DialogDescription>
           </DialogHeader>
 
@@ -544,6 +545,20 @@ export default function KaryawanPage() {
                 placeholder="Nama lengkap karyawan..."
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
+                className="rounded-xl border-slate-200"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-nik" className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                NIK Karyawan
+              </Label>
+              <Input
+                id="edit-nik"
+                placeholder="800000"
+                value={editNik}
+                onChange={(e) => setEditNik(e.target.value)}
                 className="rounded-xl border-slate-200"
                 required
               />

@@ -18,94 +18,80 @@ async function seed() {
     console.log("⚠️ Error clearing items tables:", err?.message || err);
   }
 
-  // 2. Clear all users EXCEPT arajatech@gmail.com
+  // 2. Clear all users, sessions, accounts
   try {
-    const usersToDelete = await db
-      .select({ id: schema.users.id, email: schema.users.email })
-      .from(schema.users)
-      .where(ne(schema.users.email, "arajatech@gmail.com"));
-
-    for (const u of usersToDelete) {
-      await db.delete(schema.sessions).where(eq(schema.sessions.userId, u.id));
-      await db.delete(schema.accounts).where(eq(schema.accounts.userId, u.id));
-    }
-    await db.delete(schema.users).where(ne(schema.users.email, "arajatech@gmail.com"));
-    console.log(`🗑️  ${usersToDelete.length} user lain berhasil dihapus (hanya menyisakan arajatech@gmail.com).`);
+    await db.delete(schema.sessions);
+    await db.delete(schema.accounts);
+    await db.delete(schema.users);
+    console.log("🗑️  Semua user, sesi, dan akun berhasil dibersihkan.");
   } catch (err: any) {
-    console.log("⚠️ Error deleting other users:", err?.message || err);
+    console.log("⚠️ Error deleting users:", err?.message || err);
   }
 
-  // 3. Ensure arajatech@gmail.com exists with plant_manager role
-  const user = {
-    name: "Abdul Rahman Jamil",
-    email: "arajatech@gmail.com",
-    password: "password123",
-    role: "plant_manager",
-  };
-
-  const existingUsers = await db
-    .select()
-    .from(schema.users)
-    .where(eq(schema.users.email, user.email));
-  const existing = existingUsers[0];
-
-  if (existing) {
-    await db.update(schema.users)
-      .set({
-        role: "plant_manager",
-        isActive: true,
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.users.email, user.email));
-    console.log(`✅ User existing diupdate ke plant_manager: ${user.email}`);
-  } else {
-    try {
-      await auth.api.signUpEmail({
-        body: {
-          name: user.name,
-          email: user.email,
-          password: user.password,
-          role: user.role,
-        },
-      });
-      console.log(`✅ User created: ${user.name} (${user.role}) - ${user.email}`);
-    } catch (error: any) {
-      console.log(`⚠️  Failed to create user: ${user.email}`, error?.message || "");
-    }
-  }
-
-  // 4. Create sample GA and Purchasing accounts if not exist
-  const additionalUsers: {
+  // 3. Define initial users with NIK and password equal to NIK
+  const initialUsers: {
     name: string;
+    nik: string;
     email: string;
     password: string;
     role: "leader" | "supervisor" | "plant_manager" | "ga" | "purchasing";
   }[] = [
-    { name: "Tim General Affair", email: "ga@unindo.co.id", password: "password123", role: "ga" },
-    { name: "Tim Purchasing", email: "purchasing@unindo.co.id", password: "password123", role: "purchasing" },
+    {
+      name: "Abdul Rahman Jamil",
+      nik: "800001",
+      email: "800001@unindo.co.id",
+      password: "800001",
+      role: "plant_manager",
+    },
+    {
+      name: "Tim General Affair",
+      nik: "800002",
+      email: "800002@unindo.co.id",
+      password: "800002",
+      role: "ga",
+    },
+    {
+      name: "Tim Purchasing",
+      nik: "800003",
+      email: "800003@unindo.co.id",
+      password: "800003",
+      role: "purchasing",
+    },
   ];
 
-  for (const u of additionalUsers) {
-    const exList = await db.select().from(schema.users).where(eq(schema.users.email, u.email));
-    const ex = exList[0];
-    if (ex) {
-      await db.update(schema.users).set({ role: u.role, isActive: true, updatedAt: new Date() }).where(eq(schema.users.email, u.email));
-      console.log(`✅ User existing diupdate: ${u.email} (${u.role})`);
-    } else {
-      try {
-        await auth.api.signUpEmail({ body: { name: u.name, email: u.email, password: u.password, role: u.role } });
-        console.log(`✅ User created: ${u.name} (${u.role}) - ${u.email}`);
-      } catch (err: any) {
-        console.log(`⚠️ Failed to create user: ${u.email}`, err?.message || "");
+  for (const u of initialUsers) {
+    try {
+      const res = await auth.api.signUpEmail({
+        body: {
+          name: u.name,
+          email: u.email,
+          password: u.password,
+          role: u.role,
+          nik: u.nik,
+        },
+      });
+
+      if (res?.user) {
+        await db
+          .update(schema.users)
+          .set({
+            nik: u.nik,
+            username: u.nik,
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.users.id, res.user.id));
       }
+      console.log(`✅ User created: ${u.name} (NIK: ${u.nik}, Role: ${u.role})`);
+    } catch (error: any) {
+      console.log(`⚠️  Failed to create user: ${u.nik} (${u.name})`, error?.message || "");
     }
   }
 
   console.log("\n✅ Seeding complete!");
-  console.log("\n📋 Account Credentials:");
-  console.log("   Plant Manager: arajatech@gmail.com / password123");
-  console.log("   Tim GA:        ga@unindo.co.id / password123");
-  console.log("   Purchasing:    purchasing@unindo.co.id / password123");
+  console.log("\n📋 Account Credentials (NIK / Password):");
+  console.log("   Plant Manager : 800001 / 800001");
+  console.log("   Tim GA        : 800002 / 800002");
+  console.log("   Purchasing    : 800003 / 800003");
 
   process.exit(0);
 }

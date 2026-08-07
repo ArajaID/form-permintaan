@@ -20,6 +20,7 @@ interface HeaderProps {
   user: {
     name: string;
     email: string;
+    nik?: string;
     role: string;
   };
   unreadCount: number;
@@ -104,7 +105,7 @@ export function Header({ user, unreadCount, onMenuClick }: HeaderProps) {
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-2 py-1.5">
               <p className="text-sm font-medium">{user.name}</p>
-              <p className="text-xs text-muted-foreground">{user.email}</p>
+              <p className="text-xs text-muted-foreground font-mono font-medium">NIK: {user.nik || user.email}</p>
               <Badge variant="secondary" className="mt-1 text-xs">
                 {roleLabels[user.role] || user.role}
               </Badge>

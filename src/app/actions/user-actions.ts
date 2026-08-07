@@ -31,7 +31,8 @@ export async function getEmployees(search?: string) {
     allUsers = allUsers.filter(
       (u) =>
         u.name.toLowerCase().includes(s) ||
-        u.email.toLowerCase().includes(s) ||
+        (u.nik && u.nik.toLowerCase().includes(s)) ||
+        (u.email && u.email.toLowerCase().includes(s)) ||
         u.role.toLowerCase().includes(s)
     );
   }
@@ -41,8 +42,9 @@ export async function getEmployees(search?: string) {
 
 export async function addEmployee(data: {
   name: string;
-  email: string;
-  password: string;
+  nik: string;
+  email?: string;
+  password?: string;
   role: "leader" | "supervisor" | "plant_manager" | "ga" | "purchasing";
 }) {
   const session = await getSession();
@@ -51,16 +53,36 @@ export async function addEmployee(data: {
     throw new Error("Tidak memiliki hak akses");
   }
 
+  const cleanNik = data.nik.trim();
+  if (!cleanNik) {
+    throw new Error("NIK Karyawan wajib diisi");
+  }
+
+  const pwd = data.password && data.password.trim() ? data.password.trim() : cleanNik;
+  const userEmail = data.email && data.email.trim() ? data.email.trim() : `${cleanNik}@unindo.co.id`;
+
   try {
     const res = await auth.api.signUpEmail({
       body: {
-        name: data.name,
-        email: data.email,
-        password: data.password,
+        name: data.name.trim(),
+        email: userEmail,
+        password: pwd,
         role: data.role,
+        nik: cleanNik,
         isActive: true,
       },
     });
+
+    if (res?.user) {
+      await db
+        .update(users)
+        .set({
+          nik: cleanNik,
+          username: cleanNik,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, res.user.id));
+    }
 
     revalidatePath("/karyawan");
     return { success: true, user: res.user };
@@ -106,7 +128,11 @@ export async function toggleEmployeeStatus(userId: string) {
 
 export async function updateEmployee(
   userId: string,
-  data: { name: string; role?: "leader" | "supervisor" | "plant_manager" | "ga" | "purchasing" }
+  data: {
+    name: string;
+    nik?: string;
+    role?: "leader" | "supervisor" | "plant_manager" | "ga" | "purchasing";
+  }
 ) {
   const session = await getSession();
   const currentRole = session.user.role;
@@ -126,10 +152,21 @@ export async function updateEmployee(
 
   if (!targetUser) throw new Error("Karyawan tidak ditemukan");
 
-  const updateData: { name: string; role?: "leader" | "supervisor" | "plant_manager" | "ga" | "purchasing"; updatedAt: Date } = {
+  const updateData: {
+    name: string;
+    nik?: string;
+    username?: string;
+    role?: "leader" | "supervisor" | "plant_manager" | "ga" | "purchasing";
+    updatedAt: Date;
+  } = {
     name: data.name.trim(),
     updatedAt: new Date(),
   };
+
+  if (data.nik && data.nik.trim()) {
+    updateData.nik = data.nik.trim();
+    updateData.username = data.nik.trim();
+  }
 
   if (data.role) {
     updateData.role = data.role;

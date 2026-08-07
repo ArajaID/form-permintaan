@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { authClient } from "@/lib/auth-client";
 import {
   Package,
   ClipboardList,
@@ -18,6 +19,7 @@ import {
   Database,
   X,
   PackageCheck,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -110,6 +112,14 @@ const allMenuItems = [
 
 export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    onClose();
+    await authClient.signOut();
+    router.push("/login");
+    router.refresh();
+  };
 
   const menuItems = allMenuItems.filter((item) => item.roles.includes(role));
 
@@ -186,10 +196,18 @@ export function Sidebar({ role, isOpen, onClose }: SidebarProps) {
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-white/10">
-          <div className="px-4 py-2">
-            <p className="text-xs text-slate-500">
+        {/* Footer with Logout */}
+        <div className="p-4 border-t border-white/10 space-y-2">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all duration-200 cursor-pointer"
+          >
+            <LogOut className="w-5 h-5 text-rose-400" />
+            <span>Keluar / Logout</span>
+          </button>
+          <div className="px-4 pt-1">
+            <p className="text-[11px] text-slate-500">
               © 2026 NextGen Request
             </p>
           </div>

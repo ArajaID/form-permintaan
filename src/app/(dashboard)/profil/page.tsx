@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updatePassword } from "@/app/actions/user-actions";
 import { authClient } from "@/lib/auth-client";
 import {
@@ -24,6 +25,7 @@ import {
   EyeOff,
   CheckCircle2,
   Lock,
+  LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,11 +33,21 @@ const roleLabels: Record<string, string> = {
   leader: "Production Leader",
   supervisor: "Supervisor Produksi",
   plant_manager: "Plant Manager",
+  ga: "Tim General Affair (GA)",
+  purchasing: "Tim Purchasing",
 };
 
 export default function ProfilPage() {
+  const router = useRouter();
   const { data: session, isPending: sessionLoading } = authClient.useSession();
   const [isPending, startTransition] = useTransition();
+
+  const handleLogout = async () => {
+    await authClient.signOut();
+    toast.success("Berhasil keluar dari akun");
+    router.push("/login");
+    router.refresh();
+  };
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -117,7 +129,7 @@ export default function ProfilPage() {
 
             <div>
               <h2 className="text-lg font-bold text-slate-900">{user?.name}</h2>
-              <p className="text-xs text-slate-500 mt-0.5">{user?.email}</p>
+              <p className="text-xs text-slate-500 font-mono font-medium mt-0.5">NIK: {user?.nik || user?.username || user?.email}</p>
             </div>
 
             <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200 font-bold text-xs px-3 py-1">

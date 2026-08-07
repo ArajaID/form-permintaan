@@ -180,7 +180,7 @@ export default async function DetailPermintaanPage({
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-sm text-slate-900 truncate">{request.requester.name}</p>
-                    <p className="text-xs text-slate-500 truncate">{request.requester.email}</p>
+                    <p className="text-xs text-slate-500 font-mono font-medium truncate">NIK: {request.requester.nik || request.requester.username || request.requester.email}</p>
                   </div>
                 </div>
               </div>
@@ -211,7 +211,7 @@ export default async function DetailPermintaanPage({
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <p className="font-bold text-sm text-slate-900 truncate">{request.reviewer.name}</p>
-                      <p className="text-xs text-slate-500 truncate">{request.reviewer.email}</p>
+                      <p className="text-xs text-slate-500 font-mono font-medium truncate">NIK: {request.reviewer.nik || request.reviewer.username || request.reviewer.email}</p>
                     </div>
                   </div>
                 ) : (
@@ -267,7 +267,7 @@ export default async function DetailPermintaanPage({
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <p className="font-bold text-sm text-slate-900 truncate">{request.handedOverByUser.name}</p>
-                      <p className="text-xs text-slate-500 truncate">{request.handedOverByUser.email}</p>
+                      <p className="text-xs text-slate-500 font-mono font-medium truncate">NIK: {request.handedOverByUser.nik || request.handedOverByUser.username || request.handedOverByUser.email}</p>
                     </div>
                   </div>
                 ) : (

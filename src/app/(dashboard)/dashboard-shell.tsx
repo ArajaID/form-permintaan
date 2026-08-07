@@ -8,6 +8,7 @@ interface DashboardShellProps {
   user: {
     name: string;
     email: string;
+    nik?: string;
     role: string;
   };
   unreadCount: number;

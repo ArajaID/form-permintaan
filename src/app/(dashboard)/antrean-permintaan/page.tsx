@@ -168,7 +168,7 @@ export default function AntreanPermintaanPage() {
                     </Avatar>
                     <div>
                       <span className="font-bold text-sm text-slate-900">{req.requester.name}</span>
-                      <span className="text-xs text-slate-500 ml-2 hidden sm:inline font-medium">({req.requester.email})</span>
+                      <span className="text-xs text-slate-500 ml-2 hidden sm:inline font-medium">({req.requester.nik || req.requester.username || req.requester.email})</span>
                     </div>
                   </div>
 

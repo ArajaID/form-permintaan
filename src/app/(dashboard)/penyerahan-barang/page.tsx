@@ -230,7 +230,7 @@ export default function PenyerahanBarangPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                     <div className="space-y-1">
                       <span className="font-bold text-slate-400 uppercase">Pemohon:</span>
-                      <p className="font-semibold text-slate-800">{req.requester.name} ({req.requester.email})</p>
+                      <p className="font-semibold text-slate-800">{req.requester.name} ({req.requester.nik || req.requester.username || req.requester.email})</p>
                     </div>
                     <div className="space-y-1">
                       <span className="font-bold text-slate-400 uppercase">Penyetuju Atasan:</span>

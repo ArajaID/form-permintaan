@@ -40,6 +40,7 @@ export default async function DashboardLayout({
       user={{
         name: session.user.name,
         email: session.user.email,
+        nik: (session.user as any).nik || (session.user as any).username || session.user.email,
         role: role,
       }}
       unreadCount={unreadCount}

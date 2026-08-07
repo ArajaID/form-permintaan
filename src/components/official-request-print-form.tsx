@@ -13,16 +13,19 @@ export interface PrintableRequestData {
   handedOverAt?: Date | string | null;
   requester: {
     name: string;
-    email: string;
+    email?: string;
+    nik?: string | null;
   };
   reviewer?: {
     name: string;
-    email: string;
+    email?: string;
+    nik?: string | null;
     role: string;
   } | null;
   handedOverByUser?: {
     name: string;
-    email: string;
+    email?: string;
+    nik?: string | null;
     role: string;
   } | null;
   requestItems: Array<{
@@ -179,7 +182,7 @@ export function OfficialRequestPrintForm({ request }: OfficialRequestPrintFormPr
               Pemohon (Leader)
             </td>
             <td style={{ border: cellBorderStyle, padding: "5px 8px", boxSizing: "border-box" }}>
-              {request.requester.name} ({request.requester.email})
+              {request.requester.name} ({request.requester.nik || request.requester.email})
             </td>
             <td style={{ border: cellBorderStyle, padding: "5px 8px", fontWeight: "bold", background: tableHeaderBg, boxSizing: "border-box" }}>
               Status Dokumen
@@ -199,7 +202,7 @@ export function OfficialRequestPrintForm({ request }: OfficialRequestPrintFormPr
               Penyetuju (Supervisor/PM)
             </td>
             <td style={{ border: cellBorderStyle, padding: "5px 8px", boxSizing: "border-box" }}>
-              {request.reviewer ? `${request.reviewer.name} (${request.reviewer.email})` : "-"}
+              {request.reviewer ? `${request.reviewer.name} (${request.reviewer.nik || request.reviewer.email})` : "-"}
             </td>
           </tr>
           {request.reviewedAt && (

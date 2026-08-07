@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { username } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -27,11 +28,20 @@ export const auth = betterAuth({
       verification: schema.verifications,
     },
   }),
+  plugins: [
+    username(),
+  ],
   emailAndPassword: {
     enabled: true,
+    minPasswordLength: 4,
   },
   user: {
     additionalFields: {
+      nik: {
+        type: "string",
+        required: false,
+        input: true,
+      },
       role: {
         type: "string",
         required: false,

@@ -18,6 +18,8 @@ export const users = mysqlTable("users", {
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
+  nik: varchar("nik", { length: 50 }).unique(),
+  username: varchar("username", { length: 255 }).unique(),
   image: text("image"),
   role: mysqlEnum("role", ["leader", "supervisor", "plant_manager", "ga", "purchasing"]).notNull().default("leader"),
   isActive: boolean("is_active").notNull().default(true),

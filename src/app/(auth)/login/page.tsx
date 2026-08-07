@@ -18,7 +18,7 @@ import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [nik, setNik] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -28,19 +28,24 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const result = await authClient.signIn.email({
-        email,
+      const result = await authClient.signIn.username({
+        username: nik,
         password,
       });
 
       if (result?.error) {
-        toast.error(result.error.message || "Login gagal. Periksa email dan kata sandi Anda.");
+        toast.error(result.error.message || "Login gagal. Periksa NIK dan kata sandi Anda.");
         setLoading(false);
         return;
       }
 
       toast.success("Login berhasil!");
-      router.push("/dashboard");
+      const userRole = (result?.data?.user as any)?.role;
+      if (userRole === "ga" || userRole === "purchasing") {
+        router.push("/penyerahan-barang");
+      } else {
+        router.push("/dashboard");
+      }
       router.refresh();
     } catch (error: any) {
       console.error("Login Error:", error);
@@ -91,21 +96,21 @@ export default function LoginPage() {
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-xl text-white">Masuk ke Akun</CardTitle>
             <CardDescription className="text-blue-200/60">
-              Masukkan email dan kata sandi Anda
+              Masukkan NIK Karyawan dan kata sandi Anda
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-blue-100">
-                  Email
+                <Label htmlFor="nik" className="text-blue-100">
+                  NIK Karyawan
                 </Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@contoh.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="nik"
+                  type="text"
+                  placeholder="800000"
+                  value={nik}
+                  onChange={(e) => setNik(e.target.value)}
                   required
                   className="bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:border-blue-400 focus:ring-blue-400/30"
                 />

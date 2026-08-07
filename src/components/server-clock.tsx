@@ -25,9 +25,16 @@ export function ServerClock() {
   };
 
   useEffect(() => {
-    syncServerTime();
-    const syncInterval = setInterval(syncServerTime, 60000);
-    return () => clearInterval(syncInterval);
+    const timer = setTimeout(() => {
+      void syncServerTime();
+    }, 0);
+    const syncInterval = setInterval(() => {
+      void syncServerTime();
+    }, 60000);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(syncInterval);
+    };
   }, []);
 
   useEffect(() => {

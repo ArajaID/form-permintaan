@@ -65,6 +65,8 @@ async function fetchFullRequests(whereClause?: any) {
       id: r.requesterId,
       name: "Pengguna " + r.requesterId,
       email: "-",
+      nik: null,
+      username: null,
       emailVerified: false,
       image: null,
       role: "leader" as const,

@@ -169,7 +169,7 @@ export default async function VerifikasiDokumenPage({
                   </div>
                   <div>
                     <p className="font-bold text-slate-900 text-sm">{request.requester.name}</p>
-                    <p className="text-xs text-slate-500">{request.requester.email}</p>
+                    <p className="text-xs text-slate-500 font-mono font-medium">NIK: {request.requester.nik || request.requester.username || request.requester.email}</p>
                   </div>
                 </div>
                 <div className="pt-2 border-t border-slate-100 text-xs font-medium text-slate-600 flex items-center gap-1.5">
@@ -204,8 +204,8 @@ export default async function VerifikasiDokumenPage({
                       </div>
                       <div>
                         <p className="font-bold text-slate-900 text-sm">{request.reviewer.name}</p>
-                        <p className="text-xs text-slate-500">
-                          {request.reviewer.role === "supervisor" ? "Supervisor" : "Plant Manager"} ({request.reviewer.email})
+                        <p className="text-xs text-slate-500 font-mono font-medium">
+                          {request.reviewer.role === "supervisor" ? "Supervisor" : "Plant Manager"} (NIK: {request.reviewer.nik || request.reviewer.username || request.reviewer.email})
                         </p>
                       </div>
                     </div>
@@ -249,8 +249,8 @@ export default async function VerifikasiDokumenPage({
                       </div>
                       <div>
                         <p className="font-bold text-slate-900 text-sm">{request.handedOverByUser.name}</p>
-                        <p className="text-xs text-slate-500">
-                          {request.handedOverByUser.role === "ga" ? "Tim GA" : request.handedOverByUser.role === "purchasing" ? "Purchasing" : request.handedOverByUser.role} ({request.handedOverByUser.email})
+                        <p className="text-xs text-slate-500 font-mono font-medium">
+                          {request.handedOverByUser.role === "ga" ? "Tim GA" : request.handedOverByUser.role === "purchasing" ? "Purchasing" : request.handedOverByUser.role} (NIK: {request.handedOverByUser.nik || request.handedOverByUser.username || request.handedOverByUser.email})
                         </p>
                       </div>
                     </div>
