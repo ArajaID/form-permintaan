@@ -3,6 +3,7 @@
 import { Bell, LogOut, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ServerClock } from "@/components/server-clock";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,7 +68,10 @@ export function Header({ user, unreadCount, onMenuClick }: HeaderProps) {
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Jam & Tanggal Server */}
+        <ServerClock />
+
         {/* Notification Bell */}
         <Link href="/notifikasi">
           <Button variant="ghost" size="icon" className="relative">

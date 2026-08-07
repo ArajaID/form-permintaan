@@ -12,6 +12,12 @@ export const metadata: Metadata = {
   title: "NextGen Request - Sistem Permintaan Barang Produksi",
   description:
     "Aplikasi manajemen permintaan barang produksi, persetujuan atasan, pelacakan stok, dan notifikasi pabrik.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-icon.svg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
